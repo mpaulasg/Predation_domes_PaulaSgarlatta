@@ -1,0 +1,28 @@
+Site,Time ,Dome,Area,Species,Attack_video,Attack_hour,Attacking_minutes,Visiting_minutes,Near_minutes
+North Palfrey ,1,1,Lizard Island,Carcharhinus melanopterus,12,6.936416185,0.45,3.04,0.11
+North Palfrey ,1,1,Lizard Island,Plectropomus leopardus,0,0,0,0,1.58
+North Palfrey ,1,2,Lizard Island,Plectropomus leopardus,0,0,0,0,0.27
+North Palfrey ,1,2,Lizard Island,Plectropomus leopardus,0,0,0,0,0.15
+North Palfrey ,1,2,Lizard Island,Carcharhinus melanopterus,0,0,0,0.1,0.06
+North Palfrey ,1,3,Lizard Island,Plectropomus leopardus,1,0,0.04,0,0.03
+North Palfrey ,1,3,Lizard Island,Carcharhinus melanopterus,0,0,0,1.12,0.06
+North Palfrey ,2,1,Lizard Island,Carcharhinus melanopterus,0,0,0,0.12,0
+North Palfrey ,2,2,Lizard Island,,0,0,0,0,0
+North Palfrey ,2,3,Lizard Island,,0,0,0,0,0
+Blue lagoon,1,1,Lizard Island,Carangidae,0,0,0,0.08,0
+Blue lagoon,1,2,Lizard Island,Triaenodon obesus,6,4.285714286,1.46,3.01,0.05
+Blue lagoon,1,3,Lizard Island,Carangidae,0,0,0,0.04,0.09
+Blue lagoon,2,1,Lizard Island,Carangoides fulvoguttatus,0,0,0,0.15,0
+Blue lagoon,2,2,Lizard Island,Plectorhinchus chrysotaenia,0,0,0,0.1,0.19
+Blue lagoon,2,3,Lizard Island,Plectorhinchus chrysotaenia,0,0,0,0.07,0
+Malabar 1 ,1,1,Sydney,,0,0,0,0,0
+Malabar 1 ,1,2,Sydney,,0,0,0,0,0
+Malabar 1 ,1,3,Sydney,Leatherjacket,0,0,0,0.25,0
+Malabar 1 ,2,1,Sydney,Leatherjacket,0,0,0,0.11,0
+Malabar 1 ,2,2,Sydney,Leatherjacket,0,0,0,0,0.05
+Malabar 1 ,2,3,Sydney,Leatherjacket,0,0,0,0.27,0.05
+Malabar 2,1,1,Sydney,Leatherjacket,5,3.571428571,0.45,3.1,0
+Malabar 2,1,2,Sydney,Leatherjacket,0,0,0,0.29,0
+Malabar 2,1,2,Sydney,Leatherjacket sp 2,0,0,0,0.37,0
+Malabar 2,2,1,Sydney,Leatherjacket,0,0,0,0.24,0
+Malabar 3,2,2,Sydney,Leatherjacket,0,0,0,0,0.11

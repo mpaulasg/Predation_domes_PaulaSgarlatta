@@ -1,0 +1,14 @@
+data_predation_squidpops:
+
+attack per video: the amount of violents attacks per video
+attack per hour: number of attacks in one hour
+attacking_minutes: sum of minutes that the predator is attacking the dome
+pursue per video: the amount of approachings per video (and/or touching the dome)
+pursue per hour: number of approaching in one hour
+pursue_minutes: sum of minutes that the predator is approaching the dome
+circling per video: the amount of circling per video 
+circling per hour: number of circling in one hour
+circling_minutes: sum of minutes that the predator is circling
+
+For squidpops we only have baits, so only number of attacks per hour will be used.
+

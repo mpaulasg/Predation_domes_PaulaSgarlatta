@@ -6,10 +6,11 @@
 ##
 ##  1- Map of study sites
 ##
-##  2- Comparison between tropics and temperate reefs using domes
+##  2- Fig. Comparison between tropics and temperate reefs using domes
 ##
-##  3- Comparison between squidpops and domes in Malabar
+##  3- Fig. Comparison between squidpops and domes in Malabar
 ##
+##  4- Stats
 ##
 ################################################################################
 
@@ -28,6 +29,7 @@ library(ozmaps)
 library(cowplot)
 library(mvabund)
 library(glmmTMB)
+library(stats)
 library(car)
 library(DHARMa)
 library(emmeans)
@@ -211,17 +213,19 @@ inspecting_toplot<- Rmisc::summarySE(inspecting, na.rm= T, measurevar=c("inspect
 trophic_colours <- c(Piscivore = "#2660A4", Herbivore = "#CBA328", Invertivore = "#DD614A",
                       Planktivore = "#F4A698", Omnivore = "#D1CFE2")
 
+mytheme <- theme(panel.background=element_rect(fill="white"), panel.grid.minor = element_blank(), axis.ticks = element_blank(),
+                 panel.grid.major = element_blank(),axis.line = element_line(size = 1, colour = "black"),
+                 axis.text = element_text(size = (18), color = "black"), axis.title = element_text(size= (18)),
+                 legend.key = element_rect(fill = "white"), legend.text = element_text(size=20),
+                 legend.title = element_blank())
+
 plot_attack <- ggplot(attack_toplot, aes(x=Area, y=attack, fill=Trophic.group)) +
   geom_col(color="black", size=0.8, position=position_dodge(width=0.6)) +
   geom_errorbar( aes(x=Area, ymin=attack-se, ymax=attack+se), 
   width=0.1, size=0.8, colour="black", position=position_dodge(width=0.6) ) +
   scale_fill_manual(values=trophic_colours) + 
   labs(x="", y="Attack per hour") +
-  theme(panel.background=element_rect(fill="white"), panel.grid.minor = element_blank(), axis.ticks = element_blank(),
-        panel.grid.major = element_blank(),axis.line = element_line(size = 1, colour = "black"),
-        axis.text = element_text(size = (18), color = "black"), axis.title = element_text(size= (18)),
-        legend.key = element_rect(fill = "white"), legend.text = element_text(size=20),
-        legend.title = element_blank())+
+  mytheme +
   ggtitle(("(a)"))
 
 plot_attack
@@ -235,11 +239,7 @@ plot_inspecting <- ggplot(inspecting_toplot,aes(x=Area, y=inspecting, fill=Troph
                  position=position_dodge(width=0.6), colour="black" ) +
   scale_fill_manual(values=trophic_colours) + 
   labs(x="", y="Inspecting per hour") +
-  theme(panel.background=element_rect(fill="white"), panel.grid.minor = element_blank(), axis.ticks = element_blank(),
-        panel.grid.major = element_blank(),axis.line = element_line(size = 1, colour = "black"),
-        axis.text = element_text(size = (18), color = "black"), axis.title = element_text(size= (18)),
-        legend.key = element_rect(fill = "white"), legend.text = element_text(size=20),
-        legend.title = element_blank())+
+  mytheme +
   ggtitle(("(b)"))
 
 plot_inspecting
@@ -247,7 +247,7 @@ plot_inspecting
 # ggsave(plot_inspecting, file=here::here("graphs/Figure_inspecting.jpeg"),
 #        height = 22, width = 25, unit = "cm" )
 
-### Now comparing with squidpops
+#### Now comparing with squidpops ##########
 
 data_squid <- data %>% 
   filter (Area != "Lizard Island", 
@@ -310,6 +310,7 @@ plot_inspect_squid <- ggplot(inspect_squid_toplot, aes(x=Method, y=inspecting, f
 
 plot_inspect_squid
 
+#Now all together 
 
 figure_3 <-ggarrange(plot_attack, plot_inspecting, plot_attack_squid,plot_inspect_squid,
           ncol = 2, nrow = 2, common.legend = TRUE, legend = "bottom")
@@ -319,18 +320,23 @@ figure_3
 #ggsave(figure_2, file=here::here("graphs/Figure_2.jpeg"),
        #height = 22, width = 25, unit = "cm" )
 
-######## Stats
+######## Stats ########
 
 ### Attacks - domes 
 
 ## Trying with GLMM - Attacks domes 
 
-attack_domes <- glmmTMB (attack ~ Area + Trophic.group + (1|Site), ziformula = ~1, data=attack, 
+attack_domes <- glmmTMB (attack ~ Area*Trophic.group + (1|Site), data=attack, 
                          family = poisson(link = "log")) 
 
 
-summary(attack_domes)
-Anova(attack_domes) #Significant - p<0.0005
+## GLMM doesn't work because the interaction is not fitting the model. 
+
+## Let's try a nested ANOVA - first model just with the total community to see if the attacks are different. 
+
+attack_domes <- aov(attack ~ Area/Site, data = attack)
+
+summary(attack_domes) # Not significant 
 
 attack_res_domes <- simulateResiduals(attack_domes)
 plot(attack_res_domes) # A little bit of dispersion but KS test good.  

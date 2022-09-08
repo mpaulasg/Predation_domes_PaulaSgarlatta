@@ -170,7 +170,7 @@ map
 ggsave(map, file=here::here("graphs", "Figure1.jpeg"),
        height = 20, width = 18, unit = "cm")
 
-####### 2- Comparison between tropics and temperate reefs using domes #####
+####### 2- Comparison between tropical and temperate reefs using domes #####
 
 data <- read.csv(here:: here("data/data_predation_squidpops.csv"))
 

@@ -73,29 +73,33 @@ inspecting_squid <- data_squid %>%
 ## Trying with GLMM - Attacks domes 
 
 
-attack_domes <- glmmTMB (attack ~ Area + Trophic.group + (1|Site), ziformula = ~1, data=attack, 
-                         family = poisson(link = "log")) 
+# attack_domes <- glmmTMB (attack ~ Area + Trophic.group + (1|Site), ziformula = ~1, data=attack, 
+#                          family = poisson(link = "log")) 
 
 #####################################EVE CHANGES##########################################
 #Adding an ID variable (rows with same ID, are same sample- different species)
 data = mutate(data , id =  paste(Area, Site,  Replicate, Time, sep = "_"))
-data = mutate(data , id =  paste(Area, Site,  Replicate, Time, sep = "_"))
-
+attack = mutate(attack , id =  paste(Area, Site,  Replicate, Time, sep = "_"))
+inspecting = mutate(inspecting , id =  paste(Area, Site,  Replicate, Time, sep = "_"))
+attack_squid = mutate(attack_squid, id =  paste( Site,  Replicate, Time, sep = "_"))
 
 #plot the data
+library(ggridges)
 ggplot(attack, aes(x = attack, y = interaction(Area, Trophic.group), fill = Area))+ geom_density_ridges()
 
 #fit a model with correlated responses (trophic groups are correlated. Do the trophic groups attack different in different Areas
-fit.rr <- glmmTMB(attack ~ Area * Trophic.group + rr(Trophic.group  + 0|id, d = 2) + (1|Site/ Replicate),
-                  data = attack, family = nbinom2()) 
+#fit.rr <- glmmTMB(attack ~ Area * Trophic.group + rr(Trophic.group  + 0|id, d = 2) + (1|Site/ Replicate),
+#                  data = attack, family = nbinom2()) 
 
 #did not converge :( I suspect there are not enough non zero observations, 
 
-# additive model does converge though- but probably doesn't answer the research question: 
-fit.rr2 <- glmmTMB(attack ~ Area + Trophic.group + rr(Trophic.group  + 0|id, d = 2)+(1|Site/Replicate),
-                  data = attack, family = nbinom2()) 
+#mod2_optim <- update(fit.rr ,  control=glmmTMBControl(optimizer=optim,                            optArgs=list(method="BFGS")))
 
-plot(simulateResiduals(fit.rr2)) 
+# additive model does converge though- but probably doesn't answer the research question: 
+#fit.rr2 <- glmmTMB(attack ~ Area + Trophic.group + rr(Trophic.group  + 0|id, d = 2)+(1|Site/Replicate),
+#                  data = attack, family = nbinom2()) 
+
+#plot(simulateResiduals(fit.rr2)) 
 #fine
 
 
@@ -105,6 +109,7 @@ plot(simulateResiduals(fit.rr2))
 #It really only makes sense to have Herbivores Omnivores and Piscivores as levels of Trophic group for this response?
 attack1 = subset(attack, attack>0)
 table(attack1$Trophic.group, attack1$Area)
+table(attack$Trophic.group, attack$Area)
 
 
 Trophic.Groups =   unlist(attack %>% 
@@ -112,362 +117,111 @@ Trophic.Groups =   unlist(attack %>%
   summarise(Sum = sum(attack)) %>%
   subset(Sum>0) %>%
   select(Trophic.group))
-attack_subset = attack %>% subset ( Trophic.group %in% Trophic.Groups)
 
-fit.rr3 <- glmmTMB(attack ~ Area * Trophic.group + rr(Trophic.group + 0|id, d = 2),
-                   data = attack_subset, family = nbinom2()) 
+attack_subset = attack %>% subset ( Trophic.group %in% Trophic.Groups) 
 
-#still doesn't converge :(
-
-###############################END OF EVE###########################################
-
-summary(attack_domes)
-Anova(attack_domes) #Significant - p=0.005
-
-attack_res_domes <- simulateResiduals(attack_domes)
-plot(attack_res_domes) # A little bit of dispersion but KS test good.  
-
-#awesome lets do post hoc tests
-
-pairs(emmeans(attack_domes,spec=~Area|Trophic.group, type="response")) # This looks suspicious to me (all
-# same p values). 
-pairs(emmeans(attack_domes,spec=~Trophic.group|Area, type="response")) # This is also suspicious, 
-## same p values in both areas
-
-### investigating - domes 
-
-insepect_domes <- glmmTMB (inspecting ~ Area + Trophic.group + (1|Site), ziformula = ~1, data=inspecting, 
-                           family = poisson(link = "log")) 
+#fit.rr3 <- glmmTMB(attack ~ Area * Trophic.group + rr(Trophic.group + 0|id, d = 2),
+#                   data = attack_subset, family = nbinom2()) 
+#even cutting down to 3 trophic groups is still not working
 
 
-summary(insepect_domes)
-Anova(insepect_domes) #Significant - p=0.00014
+#there is only one site with one herbivore which is making things hard for the model. 
+attack_subset2 = attack %>% subset ( Trophic.group %in% Trophic.Groups)%>% subset(Trophic.group != "Herbivore")
 
-inspec_res_domes <- simulateResiduals(insepect_domes)
-plot(inspec_res_domes) # Residuals not good??  
+#This model asks whether Omnivores and Piscivores attack differently in Sydney vs Lizard Island (we don't have enough data on other trophic groups)
+fit.rr4 <- glmmTMB(attack ~ Area * Trophic.group + rr(Trophic.group + 0|id, d = 2) + (1|Site) + (1|id),
+                   data = attack_subset2, family = poisson()) 
 
-#lets do post hoc tests
+#check assumptions
+plot(simulateResiduals(fit.rr4))
 
-pairs(emmeans(insepect_domes,spec=~Area|Trophic.group, type="response")) # This looks suspicious to me (all
-# same p values). 
-pairs(emmeans(insepect_domes,spec=~Trophic.group|Area, type="response")) # This is also suspicious, 
-## same p values in both areas
+#test interactions
+fit.rr4_null <- glmmTMB(attack ~ Area + Trophic.group+ rr(Trophic.group + 0|id, d = 2) + (1|Site) + (1|id),
+                   data = attack_subset2, family = poisson()) 
+
+anova(fit.rr4_null ,fit.rr4)
+
+#interaction significant. test contrasts
+
+emmeans(fit.rr4, pairwise~Area|Trophic.group, type= "response")
+
+#Piscivores respond differently in attacks (attack 100 times more in Lizard Island); no evidence for omnivores
+ggplot(attack_subset2, aes(Area, attack, colour = Site))+geom_jitter()+facet_wrap(~Trophic.group)
+#Conclusions for herbivores/ Inventivores and Planktivores are all no evidence- graphically :P 
+ggplot(attack, aes(Area, attack, colour = Site))+geom_jitter()+facet_wrap(~Trophic.group)
+
+
+# summary(attack_domes)
+# Anova(attack_domes) #Significant - p=0.005
+# 
+# attack_res_domes <- simulateResiduals(attack_domes)
+# plot(attack_res_domes) # A little bit of dispersion but KS test good.  
+# 
+# #awesome lets do post hoc tests
+# 
+# pairs(emmeans(attack_domes,spec=~Area|Trophic.group, type="response")) # This looks suspicious to me (all
+# # same p values). 
+# pairs(emmeans(attack_domes,spec=~Trophic.group|Area, type="response")) # This is also suspicious, 
+# ## same p values in both areas
+# 
+# ### investigating - domes 
+
+#insepect_domes <- glmmTMB (inspecting ~ Area + Trophic.group + (1|Site), ziformula = ~1, data=inspecting, 
+#                           family = poisson(link = "log")) 
+
+
+insepect_domes <- glmmTMB(inspecting ~ Area * Trophic.group + (1|Site) ,
+                   data = inspecting, family = tweedie()) 
+
+emmeans(insepect_domes, pairwise ~Area|Trophic.group)
+
+library(rstanarm)
+#stan refuses to work on non count poisson data. So round the response 
+
+
+insepect_domes_stan2 = stan_glmer(round(inspecting) ~ Area * Trophic.group + (1|Site) ,
+                                 data = inspecting, family = neg_binomial_2()) 
+
+#looks like stan could work and use this to fix up the output https://cran.r-project.org/web/packages/tidybayes/vignettes/tidybayes.html
+
+#shows that invertivores and  omnivores and herbs have differences that do not overlap zero. Note that the HPD at 0.9 is kind of like a CI at 0.95. 
+
+#Piscivores on the boundary! The presence of some non zeros has caused this.  
+library(tidybayes)
+insepect_domes_stan2  %>%
+  emmeans(pairwise ~ Area|Trophic.group, level = 0.9)
+
+
+
+ggplot(inspecting, aes(Area, inspecting, colour = Site))+geom_jitter()+facet_wrap(~Trophic.group)
 
 
 
 ### Attacks - domes/squidpops 
 
-attack_squid_glmm <- glmmTMB (attack ~ Method + Trophic.group , ziformula = ~1, data=attack_squid, 
-                              family = poisson(link = "log")) 
+#attack_squid_glmm <- glmmTMB (attack ~ Method + Trophic.group , ziformula = ~1, data=attack_squid, 
+#                              family = poisson(link = "log")) 
 
+attack_squid_glmm <- glmmTMB(attack ~ Method* Trophic.group +(1|id) ,
+                          data = attack_squid, family = poisson()) 
 
-summary(attack_squid_glmm)
-Anova(attack_squid_glmm) #Significant - p<0.0005
+#try with stan_glmer instead
 
-attack_res_squid <- simulateResiduals(attack_squid_glmm)
-plot(attack_res_squid) # Residuals don't look great  
+attack_squid_stan = stan_glmer(attack ~ Method* Trophic.group + (1|Site)+(1|id) ,
+           data = attack_squid, family = poisson()) 
 
-#awesome lets do post hoc tests
+#plot
+ggplot(attack_squid, aes(Method, attack, colour = Site))+geom_jitter()+facet_wrap(~Trophic.group)
 
-pairs(emmeans(attack_squid_glmm,spec=~Method|Trophic.group, type="response")) # This looks suspicious to me (all
-# same p values). 
-pairs(emmeans(attack_squid_glmm,spec=~Trophic.group|Method, type="response")) # This is also suspicious, 
-## same p values in both methods
+attack_squid_stan   %>%
+  emmeans(pairwise ~ Method|Trophic.group, level = 0.9)
 
-### investigating - domes/squidpops
 
-inspect_squid_glmm <- glmmTMB (inspecting ~ Method + Trophic.group , ziformula = ~1, data=inspecting_squid, 
-                               family = poisson(link = "log")) 
+#Now go back the try the attack vs area model:
 
+attack_squid_stan = stan_glmer(round(attack) ~Area*Trophic.group + (1|Site) ,
+                               data = attack, family = poisson()) 
 
-summary(inspect_squid_glmm)
-Anova(inspect_squid_glmm) #Significant - p=0.002
 
-inspec_res_squid <- simulateResiduals(inspect_squid_glmm)
-plot(inspec_res_squid) # Residuals not good??  
-
-#lets do post hoc tests
-
-pairs(emmeans(inspect_squid_glmm,spec=~Method|Trophic.group, type="response")) # This looks suspicious to me (all
-# same p values). 
-pairs(emmeans(inspect_squid_glmm,spec=~Trophic.group|Method, type="response")) # This is also suspicious, 
-## same p values in both areas
-
-
-######################################### TRYING MVABUD #######################################################
-
-
-rm(list=ls()) # cleaning memory
-
-# libraries
-library(tidyverse)
-library(dplyr)
-library(mvabund)
-library(car)
-library(DHARMa)
-library(emmeans)
-library(here)
-
-
-data <- read.csv("data_predation_squidpops.csv")
-
-
-#Filter first for dome comparison
-
-data_domes <- data %>% 
-  filter (Method != "Squidpop",
-          Treatment != "No_fish") %>% 
-  dplyr::select(-Treatment)  # Deleting treatment as no fish = 0
-
-
-attack <- data_domes %>%
-  dplyr::group_by(Area,Site, Replicate,Time, Trophic.group)%>% # sum everything in the transect by species
-  dplyr::summarise(attack=sum(attack_hour,na.rm=T))%>% 
-  ungroup%>% 
-  tidyr::complete(Trophic.group, nesting(Area, Site, Replicate,Time),fill= list(attack=0)) %>% 
-  replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
-  glimpse()
-
-inspecting <- data_domes %>%
-  dplyr::group_by(Area,Site,Replicate,Time,Trophic.group)%>% 
-  dplyr::summarise(inspecting=sum(inspecting_hour,na.rm=T))%>% 
-  ungroup%>% 
-  tidyr::complete(Trophic.group, nesting(Area, Site,Replicate,Time),fill= list(inspecting=0)) %>% 
-  replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
-  glimpse()
-
-
-### Now comparing with squidpops
-
-data_squid <- data %>% 
-  filter (Area != "Lizard Island", 
-          Site != "Malabar 1 ",
-          Treatment != "No_fish") %>% 
-  dplyr::select(-Treatment)
-
-attack_squid <- data_squid %>%
-  dplyr::group_by(Method,Site,Replicate,Time,Trophic.group)%>% # sum everything in the transect by species
-  dplyr::summarise(attack=sum(attack_number,na.rm=T))%>% 
-  ungroup%>% 
-  tidyr::complete(Trophic.group, nesting(Method, Site,Replicate,Time),fill= list(attack=0)) %>% 
-  replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
-  glimpse()
-
-inspecting_squid <- data_squid %>%
-  dplyr::group_by(Method,Site,Replicate,Time, Trophic.group)%>% 
-  dplyr::summarise(inspecting=sum(inspecting_hour,na.rm=T))%>% 
-  ungroup%>% 
-  tidyr::complete(Trophic.group, nesting(Method,Site,Replicate,Time),fill= list(inspecting=0)) %>% 
-  replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
-  glimpse()
-
-### Attacks - domes 
-
-# # Pivot_wider the data to use it in mvabund
-
-attack_dome_stats <- attack %>% 
-  group_by (Trophic.group) %>% 
-  mutate(row=row_number()) %>% 
-  pivot_wider(names_from = Trophic.group, values_from = attack) %>% 
-  dplyr::select(-row) %>% 
-  replace(is.na(.),0) %>% 
-  dplyr:: select(-Invertivore, -Planktivore)
-
-
-# Sub-setting the variables and converting it to an mvabund object format
-
-categories <- mvabund(attack_dome_stats[, 6:7])
-
-# Check the spread of the data
-
-par(mar = c(2, 10, 2, 2)) # adjusts the margins
-boxplot(categories, horizontal = TRUE, las = 2, main = "Points")
-
-#Piscivores dominating
-
-
-#Check mean-variance relationship
-
-meanvar.plot(categories)
-
-
-plot(categories ~ as.factor(attack_dome_stats$Area), cex.axis = 0.4, cex = 0.4)
-
-## Let's try with a GLM
-
-mod1 <- manyglm(categories ~ attack_dome_stats$Area, family = "poisson")
-
-plot(mod1)
-
-#Looks like a fan shape so we will use negative binomial instead
-
-mod2 <- manyglm(categories ~ attack_dome_stats$Area, family = "negative_binomial")
-
-plot(mod2) #Looks better!
-
-anova(mod2) #Significant effect of area - p = 0.002
-
-# Now let's check which categories are different
-
-test <- anova(mod2, p.uni = "adjusted") 
-
-## The only two different between areas are piscivore (p=0.02) and
-
-#omnivore (p=0.02)
-
-### Investigating - domes
-
-# # Pivot_wider the data to use it in mvabund
-
-investig_dome_stats <- inspecting %>% 
-  group_by (Trophic.group) %>% 
-  mutate(row=row_number()) %>% 
-  pivot_wider(names_from = Trophic.group, values_from = inspecting) %>% 
-  dplyr::select(-row) %>% 
-  replace(is.na(.),0)
-
-
-# Sub-setting the variables and converting it to an mvabund object format
-
-categories_inv <- mvabund(investig_dome_stats[, 5:9])
-
-# Check the spread of the data
-
-par(mar = c(2, 10, 2, 2)) # adjusts the margins
-boxplot(categories_inv, horizontal = TRUE, las = 2, main = "Points")
-
-#Piscivores dominating
-
-
-#Check mean-variance relationship
-
-meanvar.plot(categories_inv)
-
-
-plot(categories_inv ~ as.factor(investig_dome_stats$Area), cex.axis = 0.4, cex = 0.4)
-
-## Let's try with a GLM
-
-mod1 <- manyglm(categories_inv ~ investig_dome_stats$Area, family = "poisson")
-
-plot(mod1)
-
-#Looks like a fan shape so we will use negative binomial instead
-
-mod2 <- manyglm(categories_inv ~ investig_dome_stats$Area, family = "negative_binomial")
-
-plot(mod2) #Looks better!
-
-anova(mod2) #Significant effect of area - p = 0.001
-
-# Now let's check which categories are different
-
-test <- anova(mod2, p.uni = "adjusted") 
-
-## Different between areas: invertivore (p=0.001); piscivore (p=0.001) and
-
-#omnivore (p=0.003)
-
-####### Attack - domes vs squidpops
-
-# # Pivot_wider the data to use it in mvabund
-
-attack_squid_stats <- attack_squid %>% 
-  group_by (Trophic.group) %>% 
-  mutate(row=row_number()) %>% 
-  pivot_wider(names_from = Trophic.group, values_from = attack) %>% 
-  dplyr::select(-row) %>% 
-  replace(is.na(.),0) %>% 
-  dplyr::select(-Invertivore)
-
-
-# Sub-setting the variables and converting it to an mvabund object format
-
-categories_attack_squid <- mvabund(attack_squid_stats[, 5:7])
-
-# Check the spread of the data
-
-par(mar = c(2, 10, 2, 2)) # adjusts the margins
-boxplot(categories_attack_squid, horizontal = TRUE, las = 2, main = "Points")
-
-#Planktivore dominating
-
-
-#Check mean-variance relationship
-
-meanvar.plot(categories_attack_squid)
-
-
-plot(categories_attack_squid ~ as.factor(attack_squid_stats$Method), cex.axis = 0.4, cex = 0.4)
-
-## Let's try with a GLM
-
-mod1 <- manyglm(categories_attack_squid ~ attack_squid_stats$Method, family = "poisson")
-
-plot(mod1)
-
-#Looks like a fan shape so we will use negative binomial instead
-
-mod2 <- manyglm(categories_attack_squid ~ attack_squid_stats$Method, family = "negative_binomial")
-
-plot(mod2) #Looks better!
-
-anova(mod2) #No Significant effect of methods - p = 0.05, which doesn't make sense...
-
-# Now let's check which categories are different
-
-test <- anova(mod2, p.uni = "adjusted") 
-
-## Different between methods: planktivore: p=0.03
-
-
-####### Inspect - domes vs squidpops
-
-# # Pivot_wider the data to use it in mvabund
-
-inspect_squid_stats <- inspecting_squid %>% 
-  group_by (Trophic.group) %>% 
-  mutate(row=row_number()) %>% 
-  pivot_wider(names_from = Trophic.group, values_from = inspecting) %>% 
-  dplyr::select(-row) %>% 
-  replace(is.na(.),0)
-
-
-# Sub-setting the variables and converting it to an mvabund object format
-
-categories_inspect_squid <- mvabund(inspect_squid_stats[, 5:8])
-
-# Check the spread of the data
-
-par(mar = c(2, 10, 2, 2)) # adjusts the margins
-boxplot(categories_inspect_squid, horizontal = TRUE, las = 2, main = "Points")
-
-#Planktivore dominating
-
-
-#Check mean-variance relationship
-
-meanvar.plot(categories_inspect_squid)
-
-
-plot(categories_inspect_squid ~ as.factor(inspect_squid_stats$Method), cex.axis = 0.4, cex = 0.4)
-
-## Let's try with a GLM
-
-mod1 <- manyglm(categories_inspect_squid ~ inspect_squid_stats$Method, family = "poisson")
-
-plot(mod1)
-
-#Looks like a fan shape so we will use negative binomial instead
-
-mod2 <- manyglm(categories_inspect_squid ~ inspect_squid_stats$Method, family = "negative_binomial")
-
-plot(mod2) #Looks better!
-
-anova(mod2) #No significant effect of methods - p = 0.05, which doesn't make sense
-
-# Now let's check which categories are different
-
-test <- anova(mod2, p.uni = "adjusted") 
-
-## Different between methods: planktivore: 0.052 ~
+emmeans(attack_squid_stan, pairwise~Area|Trophic.group, level = 0.9) 
+#Results qualitatively the same as before when we did glmmTMB on just the two trophic groups without the others, but more satisfactory -  we have omnivores and piscivores different. Others are no evidence of difference. 

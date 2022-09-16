@@ -32,6 +32,7 @@ library(glmmTMB)
 library(stats)
 library(car)
 library(DHARMa)
+library(lme4)
 library(emmeans)
 library(here)
 
@@ -184,6 +185,10 @@ data_domes <- data %>%
   dplyr::select(-Treatment)
   
 
+attack_species <- data_domes %>%
+  dplyr::group_by(Area,Site, Replicate,Time)%>% # sum everything in the transect by species
+  dplyr::summarise(attack=sum(attack_hour,na.rm=T))
+
 attack <- data_domes %>%
   dplyr::group_by(Area,Site, Replicate,Time, Trophic.group)%>% # sum everything in the transect by species
   dplyr::summarise(attack=sum(attack_hour,na.rm=T))%>% 
@@ -204,6 +209,9 @@ inspecting <- data_domes %>%
 
 attack_toplot<- Rmisc::summarySE(attack, na.rm= T, measurevar=c("attack"), 
                                          groupvars=c("Area", "Trophic.group"))
+
+attack_toplot_species<- Rmisc::summarySE(attack_species, na.rm= T, measurevar=c("attack"), 
+                                 groupvars=c("Area"))
 
 inspecting_toplot<- Rmisc::summarySE(inspecting, na.rm= T, measurevar=c("inspecting"), 
                                  groupvars=c("Area", "Trophic.group"))
@@ -230,6 +238,16 @@ plot_attack <- ggplot(attack_toplot, aes(x=Area, y=attack, fill=Trophic.group)) 
 
 plot_attack
 
+plot_attack_species <- ggplot(attack_toplot_species, aes(x=Area, y=attack)) +
+  geom_col(color="black", size=0.8, position=position_dodge(width=0.6)) +
+  geom_errorbar( aes(x=Area, ymin=attack-se, ymax=attack+se), 
+                 width=0.1, size=0.8, colour="black", position=position_dodge(width=0.6) ) +
+  labs(x="", y="Attack per hour") +
+  mytheme +
+  ggtitle(("(a)"))
+
+plot_attack_species
+
 #ggsave(plot_attack, file=here::here("graphs/Figure_attack.jpeg"),
       # height = 22, width = 25, unit = "cm" )
 
@@ -250,7 +268,7 @@ plot_inspecting
 #### Now comparing with squidpops ##########
 
 data_squid <- data %>% 
-  filter (Area != "Lizard Island", 
+ dplyr:: filter (Area != "Lizard Island", 
           Site != "Malabar 1 ",
           Treatment != "No_fish") %>% 
  dplyr::select(-Treatment)
@@ -270,6 +288,7 @@ inspecting_squid <- data_squid %>%
   tidyr::complete(Trophic.group, nesting(Method,Site,Replicate,Time),fill= list(inspecting=0)) %>% 
   replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
   glimpse()
+
 
 attack_squid_toplot<- Rmisc::summarySE(attack_squid, na.rm= T, measurevar=c("attack"), 
                                  groupvars=c("Method", "Trophic.group"))
@@ -320,17 +339,941 @@ figure_3
 #ggsave(figure_2, file=here::here("graphs/Figure_2.jpeg"),
        #height = 22, width = 25, unit = "cm" )
 
+
+
+
+
+
 ######## Stats ########
+
+data <- read.csv(here:: here("data/data_predation_squidpops.csv"))
 
 ### Attacks - domes 
 
-## Trying with GLMM - Attacks domes 
+#Filter first for dome comparison
 
-attack_domes <- glmmTMB (attack ~ Area*Trophic.group + (1|Site), data=attack, 
-                         family = poisson(link = "log")) 
+data_domes <- data %>% 
+  filter (Method != "Squidpop",
+          Treatment != "No_fish") %>% 
+  dplyr::select(-Treatment)
+
+attack_2 <- data_domes %>%
+  dplyr::group_by(Area,Site, Replicate,Time)%>% # sum everything in the replicate by species
+  dplyr::summarise(attack=sum(attack_hour,na.rm=T)) %>% 
+  ungroup%>% 
+  tidyr::complete(Area, fill= list(attack=0)) %>% 
+  replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+  glimpse()
+
+inspecting_2 <- data_domes %>%
+  dplyr::group_by(Area,Site, Replicate,Time)%>% # sum everything in the replicate by species
+  dplyr::summarise(inspecting=sum(inspecting_hour,na.rm=T)) %>% 
+  ungroup%>% 
+  tidyr::complete(Area, fill= list(inspecting=0)) %>% 
+  replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+  glimpse()
+
+boxplot(attack ~ Area, data=attack_2) + geom_jitter()
+
+boxplot(inspecting ~ Area, data=inspecting_2) + geom_jitter()
+
+  # #Try with binomial data and log data
+  # 
+  # attack_binary <- attack_2 %>% 
+  # mutate(binary=ifelse(attack >0, 1, 0)) %>% 
+  # mutate(log_attack = log10(attack + 1))
+
+  ############# Trying with GLMM - Attacks domes 
+  
+  
+  attack_domes <- glmmTMB (attack  ~ Area + (1|Site) + (1|Replicate), data=attack_2, 
+                           family = poisson(link="log")) 
+  
+  
+  Anova(attack_domes) # p=0.19, which is surprising? 
+  
+  attack_res_domes <- simulateResiduals(attack_domes)
+  plot(attack_res_domes) #Good
+  testDispersion(attack_res_domes) 
+
+  # Tried with 0,1 data but same result
+  
+  ############## Inspecting
+  
+
+  inspect_domes <- glmmTMB (inspecting ~ Area + (1|Site) + (1|Replicate), data=inspecting_2, 
+                             family = poisson(link = "log")) 
+  
+  Anova(inspect_domes) #Significant - p=0.4 - this is surprising?
+  
+  inspec_res_domes <- simulateResiduals(inspect_domes)
+  plot(inspec_res_domes) # Good! 
+  
+  ####Let's try just one trophic group per time. 
+  
+  attack <- data_domes %>%
+    dplyr::group_by(Area,Site, Replicate,Time, Trophic.group)%>% # sum everything in the replicate by species
+    dplyr::summarise(attack=sum(attack_hour,na.rm=T)) %>% 
+    ungroup%>% 
+    tidyr::complete(Trophic.group, nesting(Area,Site, Replicate,Time), fill= list(attack=0)) %>% 
+    replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+    glimpse()
+  
+  inspecting_2 <- data_domes %>%
+    dplyr::group_by(Area,Site, Replicate,Time, Trophic.group)%>% # sum everything in the replicate by species
+    dplyr::summarise(inspecting=sum(inspecting_hour,na.rm=T)) %>% 
+    ungroup%>% 
+    tidyr::complete(Trophic.group, nesting(Area,Site, Replicate,Time), fill= list(inspecting=0)) %>% 
+    replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+    glimpse()
+  
+  
+  
+  piscivores <- attack %>% 
+    filter(Trophic.group == "Piscivore")
+  
+  pisc <- glmmTMB (attack ~ Area + (1|Site) + (1|Replicate), data=piscivores, 
+                   family = poisson(link = "log")) 
+  
+
+  Anova(pisc) #p=0.0003991
+  
+  #This one  works!
+  
+  pis_res_domes <- simulateResiduals(pisc)
+  plot(pis_res_domes) # Good!
+  
+  Omnivore <- attack %>% 
+    filter(Trophic.group == "Omnivore")
+  
+  omn <- glmmTMB(attack  ~ Area + (1|Site) + (1|Replicate),  data = Omnivore,
+                 family = poisson(link = "log"))
+  
+  Anova(omn) #Cannot run the model, the model doesn't fit. I guess the model doesn't fit because there are not
+  #omnivores in Lizard
+
+  Herbivore <- attack %>% 
+    filter(Trophic.group == "Herbivore")
+  
+  herb <- glmmTMB(attack ~ Area + (1|Site) + (1|Replicate), data=Herbivore,
+                  family= poisson(link = "log"))
+  
+  Anova(herb)#Cannot run the model, the model doesn't fit. I guess the model doesn't fit because there are not
+  #herbivores in Sydney
+  
+  
+  
+  piscivores_inv <- inspecting_2 %>% 
+    filter(Trophic.group == "Piscivore")
+  
+  pisc_inv <- glmmTMB(log(inspecting + 1) ~ Area + (1|Site) + (1|Replicate), data=piscivores_inv,
+                      family = tweedie(link = "log"))
+  
+  summary(pisc_inv)
+  Anova(pisc_inv) #Significant - p=0.002
+  
+  pisc_inv_res_domes <- simulateResiduals(pisc_inv)
+  plot(pisc_inv_res_domes) # Perfect
+  
+  
+  Omnivore_inv <- inspecting_2 %>% 
+    filter(Trophic.group == "Omnivore")
+  
+  omn_inv <- glmmTMB(log(inspecting + 1) ~ Area + (1|Site) + (1|Replicate), data=Omnivore_inv,
+                     family = poisson(link = "log"))
+  
+  Anova(omn_inv)#Cannot run the model, the model doesn't fit. I guess the model doesn't fit because there are not
+  #omnivores in Lizard
+  
+  
+  Herbivore_inv <- inspecting_2 %>% 
+    filter(Trophic.group == "Herbivore")
+  
+  herb_inv <- glmmTMB(inspecting ~ Area + (1|Site) + (1|Replicate), data=Herbivore_inv,
+                      family = poisson(link = "log"))
+  
+  Anova(herb_inv)#Cannot run the model, the model doesn't fit. I guess the model doesn't fit because there are not
+  #herbivores in Sydney
+  
+  planktivore_inv <- inspecting_2 %>% 
+    filter(Trophic.group == "Planktivore")
+  
+  plank_inv <- glmmTMB(inspecting ~ Area + (1|Site) + (1|Replicate), data=planktivore_inv,
+                       family = poisson(link = "log"))
+  
+  Anova(plank_inv) # p=0.63
+  
+  plank_inv_res_domes <- simulateResiduals(plank_inv)
+  plot(plank_inv_res_domes) # Good!
+  
+  
+  
+  
+  
+############ Comparison domes/squidpops  
+  
+  data_squid <- data %>% 
+    dplyr:: filter (Area != "Lizard Island", 
+                    Site != "Malabar 1 ",
+                    Treatment != "No_fish") %>% 
+    dplyr::select(-Treatment)
+  
+  attack_2_squid <- data_squid %>%
+    dplyr::group_by(Method,Site, Replicate,Time)%>% # sum everything in the replicate by species
+    dplyr::summarise(attack=sum(attack_hour,na.rm=T)) %>% 
+    ungroup%>% 
+    tidyr::complete(Method, fill= list(attack=0)) %>% 
+    replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+    glimpse()
+  
+  inspecting_2_squid <- data_squid %>%
+    dplyr::group_by(Method, Site, Replicate,Time)%>% # sum everything in the replicate by species
+    dplyr::summarise(inspecting=sum(inspecting_hour,na.rm=T)) %>% 
+    ungroup%>% 
+    tidyr::complete(Method, fill= list(inspecting=0)) %>% 
+    replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+    glimpse()
+  
+  ############# Trying with GLMM - Attacks domes/squidpops 
+  
+  
+  attack_squid <- glmmTMB (attack  ~ Method + (1|Site) + (1|Replicate), data=attack_2_squid, 
+                           family = poisson(link="log")) 
+  
+  
+  Anova(attack_squid) # p<0.001 
+  
+  attack_res_squid <- simulateResiduals(attack_squid)
+  plot(attack_res_squid) #This one no working
+  testDispersion(attack_res_squid) # this one looks good
+  bartlett.test(attack  ~ Method, data=attack_2_squid)#Good kinda
+  
+  ############## Inspecting
+  
+  
+  inspect_squid <- glmmTMB (inspecting ~ Method + (1|Site) + (1|Replicate), data=inspecting_2_squid, 
+                            family = poisson(link = "log")) 
+  
+  Anova(inspect_squid) # ~ no significant - p=0.048*
+  
+  inspec_res_squid <- simulateResiduals(inspect_squid)
+  plot(inspec_res_squid) # Not enough points I guess 
+  testDispersion(inspec_res_squid) # this one looks good
+  bartlett.test(inspecting ~ Method, data=inspecting_2_squid)#Good
+  
+  
+  #######Let's try just one trophic group per time. 
+  
+  attack_squid_2 <- data_squid %>%
+    dplyr::group_by(Method,Site, Replicate,Time, Trophic.group)%>% # sum everything in the replicate by species
+    dplyr::summarise(attack=sum(attack_hour,na.rm=T)) %>% 
+    ungroup%>% 
+    tidyr::complete(Trophic.group, nesting(Method,Site, Replicate,Time), fill= list(attack=0)) %>% 
+    replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+    glimpse()
+  
+  inspecting_squid_2 <- data_squid %>%
+    dplyr::group_by(Method,Site, Replicate,Time, Trophic.group)%>% # sum everything in the replicate by species
+    dplyr::summarise(inspecting=sum(inspecting_hour,na.rm=T)) %>% 
+    ungroup%>% 
+    tidyr::complete(Trophic.group, nesting(Method,Site, Replicate,Time), fill= list(inspecting=0)) %>% 
+    replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+    glimpse()
+  
+  
+  
+  piscivores_squid <- attack_squid_2 %>% 
+    filter(Trophic.group == "Piscivore")
+  
+  pisc_squid <- glmmTMB (attack ~ Method + (1|Site) + (1|Replicate), data=piscivores_squid, 
+                   family = poisson(link = "log")) 
+  
+  
+  Anova(pisc_squid) #Not working because no piscivores with squidpops
+  
+    Omnivore_squid <- attack_squid_2 %>% 
+    filter(Trophic.group == "Omnivore")
+  
+  omn_squid <- glmmTMB(attack  ~ Method + (1|Site) + (1|Replicate),  data = Omnivore_squid,
+                 family = poisson(link = "log"))
+  
+  Anova(omn_squid) #p<0.008
+  omn_attack_res_squid <- simulateResiduals(omn_squid)
+  plot(omn_attack_res_squid) # Not so many points 
+  testDispersion(omn_attack_res_squid) # this one looks good
+  bartlett.test(attack  ~ Method , data=Omnivore_squid)#Good
+  
+  
+  Herbivore_squid <- attack_squid_2 %>% 
+    filter(Trophic.group == "Herbivore")
+  
+  herb <- glmmTMB(attack ~ Method + (1|Site) + (1|Replicate), data=Herbivore_squid,
+                  family= poisson(link = "log"))
+  
+  Anova(herb)#Cannot run the model, the model doesn't fit. I guess the model doesn't fit because there are not
+  #herbivores in Sydney
+  
+
+  piscivores_squid_inv <- inspecting_squid_2 %>% 
+    filter(Trophic.group == "Piscivore")
+  
+  pisc_squid_inv <- glmmTMB(inspecting  ~ Method + (1|Site) + (1|Replicate), data=piscivores_squid_inv,
+                      family = poisson(link="log"))
+  
+   Anova(pisc_squid_inv) #Cannot run the model, the model doesn't fit. I guess the model doesn't fit because there are not
+   #piscivores in Malabar
+  
+  
+  Omnivore_inv <- inspecting_squid_2 %>% 
+    filter(Trophic.group == "Omnivore")
+  
+  omn_squid_inv <- glmmTMB(log(inspecting + 1) ~ Method + (1|Site) + (1|Replicate), data=Omnivore_inv,
+                     family = poisson(link = "log"))
+  
+  Anova(omn_inv)#Cannot run the model, the model doesn't fit. I guess the model doesn't fit because there are not
+  #omnivores with squidpops
+  
+  
+  planktivore_inv <- inspecting_squid_2 %>% 
+    filter(Trophic.group == "Planktivore")
+  
+  plank_inv <- glmmTMB(log(inspecting + 1) ~ Method + (1|Site) + (1|Replicate), data=planktivore_inv,
+                       family = poisson(link = "log"))
+  
+  Anova(plank_inv) # p=0.02
+  
+  plank_inv_res_squid <- simulateResiduals(plank_inv)
+  plot(plank_inv_res_squid) # too few points 
+  testDispersion(plank_inv_res_squid) # this one looks good
+  bartlett.test(log(inspecting + 1)  ~ Method , data=planktivore_inv)#Good
+
+  
+  
+  
+  
+  
+  
+  ########################### EXTRAS ########  
+  
+  attack <- attack %>% 
+  filter(Trophic.group != "Planktivore",
+         Trophic.group != "Invertivore")
+
+attack_2 <- data_domes %>%
+  dplyr::group_by(Area,Site, Replicate,Time)%>% # sum everything in the transect by species
+  dplyr::summarise(attack=sum(attack_hour,na.rm=T))%>% 
+  
+#Try with binomial data and log data
+
+attack <- attack %>% 
+  mutate(binary=ifelse(attack >0, 1, 0)) %>% 
+  mutate(log_attack = log10(attack + 1))
+
+############# Trying with GLMM - Attacks domes 
+
+## Interactions are giving problems so let's try without them 
+
+attack_domes <- glmmTMB (attack  ~ Area:Trophic.group + (1|Site)+ (1|Replicate), data=attack, 
+                         family = poisson(link="log")) 
 
 
-## GLMM doesn't work because the interaction is not fitting the model. 
+Anova(attack_domes) # The interaction is working p=0.0002286
+
+attack_res_domes <- simulateResiduals(attack_domes)
+plot(attack_res_domes) 
+testDispersion(attack_res_domes) #Good enough
+
+insepect_domes <- glmmTMB (inspecting ~ Area:Trophic.group + (1|Site) + (1|Replicate), data=inspecting, 
+                           family = poisson(link = "log")) 
+
+Anova(insepect_domes) #Significant - p=0.00010
+
+inspec_res_domes <- simulateResiduals(insepect_domes)
+plot(inspec_res_domes) # Good! 
+
+
+attack_squid <- attack_squid %>% 
+  filter(Trophic.group != "Invertivore")
+
+attack_squid$Replicate <- factor(attack_squid$Replicate)
+
+attack_squid_glmm <- glmmTMB (attack  ~ Method:Trophic.group + (1|Site) + (1|Replicate),  data=attack_squid, 
+                              family = poisson(link = "log")) 
+
+Anova(attack_squid_glmm)
+
+attack_squid_glmm_res_domes <- simulateResiduals(attack_squid_glmm)
+plot(attack_squid_glmm_res_domes) # Good!
+
+
+inspecting_squid$Replicate <- factor(inspecting_squid$Replicate)
+
+inspecting_squid$Method <- factor(inspecting_squid$Method)
+
+inspect_squid_glmm <- glmmTMB (log(inspecting + 1) ~ Method:Trophic.group + (1|Site) + (1|Replicate), data=inspecting_squid, 
+                               family = poisson(link="log")) 
+
+
+Anova(inspect_squid_glmm) #Significant - p<0.001
+
+inspec_res_squid <- simulateResiduals(inspect_squid_glmm)
+plot(inspec_res_squid) # Residuals not good, let's take a closer look
+
+par(mfrow=c(1,2))
+
+plotResiduals(inspec_res_squid, inspecting_squid$Trophic.group)
+plotResiduals(inspec_res_squid, inspecting_squid$Method) #Perfect!
+
+#### PERFECTTTTT THIS IS THE FINAL ONE
+
+
+Herbivores <- read.csv("data/Herbivore_specialisation.csv", header = TRUE)
+
+
+Herb_community <- Herbivores[5:11]
+library(vegan)
+
+Herb_community.mds <- metaMDS(comm = Herb_community, 
+                              distance = "bray", trace = FALSE, autotransform = FALSE)
+
+
+plot(Herb_community.mds$points)
+
+MDS_xy <- data.frame(Herb_community.mds$points)
+MDS_xy$Habitat <- Herbivores$Habitat
+MDS_xy$DayNight <- Herbivores$DayNight
+library(ggplot2)
+ggplot(MDS_xy, aes(MDS1, MDS2, color = Habitat)) +
+  geom_point() +
+  theme_bw()
+
+ggplot(MDS_xy, aes(MDS1, MDS2, color = DayNight)) +
+  geom_point() +
+  theme_bw()
+
+# # Pivot_wider the data to do nMDS
+
+attack_dome_MDS <- attack %>% 
+  group_by (Trophic.group) %>% 
+  dplyr::select(-binary, -log_attack) %>% 
+  mutate(row=row_number()) %>% 
+  pivot_wider(names_from = Trophic.group, values_from = attack) %>% 
+  dplyr::select(-row) %>% 
+  replace(is.na(.),0) 
+
+attack_dome_MDS <- attack_dome_MDS[-c(1,5,6,10,12, 13, 14, 15, 16, 17,22),]
+
+attack_dome_comm <- attack_dome_MDS[5:7]
+
+attack_dome_comm.mds <- metaMDS(comm = attack_dome_comm, 
+                              distance = "bray", trace = FALSE, autotransform = FALSE)
+
+
+plot(attack_dome_comm.mds$points)
+
+MDS_xy <- data.frame(attack_dome_comm.mds$points)
+MDS_xy$Area <- attack_dome_MDS$Area
+MDS_xy$DayNight <- Herbivores$DayNight
+library(ggplot2)
+ggplot(MDS_xy, aes(MDS1, MDS2, color = Area)) +
+  geom_point() +
+  theme_bw()
+
+ggplot(MDS_xy, aes(MDS1, MDS2, color = DayNight)) +
+  geom_point() +
+  theme_bw()
+
+
+
+
+
+
+
+
+
+
+
+
+### More trials 
+
+### Attacks - domes 
+
+attack <- attack %>% 
+  filter(Trophic.group != "Planktivore",
+         Trophic.group != "Invertivore")
+
+#Try with binomial data and log data
+
+attack <- attack %>% 
+  mutate(binary=ifelse(attack >0, 1, 0)) %>% 
+  mutate(log_attack = log10(attack + 1))
+
+############# Trying with GLMM - Attacks domes 
+
+## Interactions are giving problems so let's try without them 
+
+attack_domes <- glmmTMB (log(attack +1) ~ Area + (1|Site) + (1|Replicate), data=attack, 
+                         family = poisson()) 
+
+summary(attack_domes)
+Anova(attack_domes) # The interaction is not working 
+
+attack_res_domes <- simulateResiduals(attack_domes)
+plot(attack_res_domes) 
+testDispersion(attack_res_domes) #Good enough
+# 
+#awesome lets do post hoc tests
+
+pairs(emmeans(attack_domes,spec=~Area|Trophic.group, type="response")) # Piscivores = 0.0053
+
+
+## Try with binomial
+
+attack_domes <- glmmTMB (binary ~ Area + (1|Site) + (1|Replicate), data=attack, 
+                         family = binomial()) 
+
+summary(attack_domes)
+Anova(attack_domes) 
+attack_res_domes <- simulateResiduals(attack_domes)
+plot(attack_res_domes) #Works better, but doesn't make a lot of sense without the interaction
+testDispersion(attack_res_domes) 
+
+emmeans(attack_domes, pairwise ~Area|Trophic.group)
+
+
+#Let's try just one trophic group per time. 
+
+piscivores <- attack %>% 
+  filter(Trophic.group == "Piscivore")
+
+pisc <- glmmTMB (attack ~ Area + (1|Site) + (1|Replicate), data=piscivores, 
+                 family = poisson(link = "log")) 
+
+
+summary(pisc)
+Anova(pisc) #p=0.0003991
+
+#This one  works!
+
+pis_res_domes <- simulateResiduals(pisc)
+plot(pis_res_domes) # Good!
+
+
+pisc <- glmmTMB (binary ~ Area + (1|Site) + (1|Replicate), data=piscivores, 
+                 family = binomial()) 
+
+
+summary(pisc)
+Anova(pisc) #p=0.0003991
+
+#This one  works! But p=0.08
+
+pis_res_domes <- simulateResiduals(pisc)
+plot(pis_res_domes) # Good!
+
+
+
+Omnivore <- attack %>% 
+  filter(Trophic.group == "Omnivore")
+
+omn <- glmmTMB(attack  ~ Area + (1|Site) + (1|Replicate),  data = Omnivore,
+               family = ziGamma(link = "log"), ziformula =~1)
+
+Anova(omn) #Cannot run the model, the model doesn't fit.  
+
+omn <- glmmTMB(binary  ~ Area + (1|Site) + (1|Replicate), data = Omnivore,
+               family = binomial())
+
+Anova(omn) #Cannot run the model, the model doesn't fit.  
+
+
+Herbivore <- attack %>% 
+  filter(Trophic.group == "Herbivore")
+
+herb <- glmmTMB(attack ~ Area + (1|Site) + (1|Replicate), data=Herbivore,
+                family= poisson(link = "log"))
+
+Anova(herb)
+
+herb <- glmmTMB(binary ~ Area + (1|Site) + (1|Replicate), data=Herbivore,
+                family= binomial())
+
+
+Anova(herb)
+
+## No differences with binary data.
+
+####### Let's try LMER
+
+attack_domes <- lmer(log_attack  ~ Area + (1|Site) + (1|Replicate), data = attack)
+
+Anova(attack_domes,type="II")
+
+qqnorm(residuals(attack_domes))
+scatter.smooth(residuals(attack_domes) ~ fitted(attack_domes))
+
+plot(attack_domes) # Good
+attack_domes_res <- simulateResiduals(attack_domes)
+plot(attack_domes_res) # Not good
+
+#Let's try just one trophic group per time. 
+
+piscivores <- attack %>% 
+  filter(Trophic.group == "Piscivore")
+
+pisc <- lmer (log_attack ~ Area + (1|Site/Replicate), data=piscivores) 
+
+Anova(pisc)
+
+plot(pisc) #This one looks good
+pisc_res <- simulateResiduals(pisc)
+plot(pisc_res) # Not ok
+bartlett.test(attack ~ Area, data=piscivores)  
+
+
+Omnivore <- attack %>% 
+  filter(Trophic.group == "Omnivore")
+
+omn <- lmer(log(attack + 1)~ Area + (1|Site/Replicate), data=Omnivore)
+
+omn <- aov(log(attack + 1)~ Area + Site, data=Omnivore)
+
+Anova(omn)
+
+plot(omn) #This one looks good
+qqnorm(residuals(omn))
+omn_res <- simulateResiduals(omn)
+plot(omn_res) # Not ok
+bartlett.test(log(attack + 1)~ Area, data=Omnivore)  # Not ok at all
+
+Herbivore <- attack %>% 
+  filter(Trophic.group == "Herbivore")
+
+herb <- lmer(binary~ Area + (1|Site/Replicate), data=Herbivore)
+
+Anova(herb)
+
+plot(herb) 
+herb_res <- simulateResiduals(herb)
+plot(herb_res) # Not ok
+bartlett.test(log(attack + 1)~ Area, data=Herbivore)  # Not ok at all
+
+
+############ investigating - domes ####
+
+insepect_domes <- glmmTMB (inspecting ~ Area*Trophic.group + (1|Site) + (1|Replicate), data=inspecting, 
+                           family = poisson(link = "log")) 
+
+summary(insepect_domes)
+Anova(insepect_domes) #Significant - p=0.00014
+
+inspec_res_domes <- simulateResiduals(insepect_domes)
+plot(inspec_res_domes) # Good!  
+
+#lets do post hoc tests
+
+pairs(emmeans(insepect_domes,spec=~Area|Trophic.group, type="response")) # Piscivores - p:0.02
+
+#Let's try just one trophic group per time. 
+
+piscivores_inv <- inspecting %>% 
+  filter(Trophic.group == "Piscivore")
+
+pisc_inv <- glmmTMB(inspecting ~ Area + (1|Site) + (1|Replicate), data=piscivores_inv,
+                    family = poisson(link = "log"))
+
+summary(pisc_inv)
+Anova(pisc_inv) #Significant - p=0.00014
+
+pisc_inv_res_domes <- simulateResiduals(pisc_inv)
+plot(pisc_inv_res_domes) # Good! 
+
+
+Omnivore_inv <- inspecting %>% 
+  filter(Trophic.group == "Omnivore")
+
+omn_inv <- glmmTMB(inspecting ~ Area + (1|Site) + (1|Replicate), data=Omnivore_inv,
+                   family = poisson(link = "log"))
+summary(omn_inv)
+Anova(omn_inv)
+
+omn_inv_res_domes <- simulateResiduals(omn_inv)
+plot(omn_inv_res_domes) # Good!
+
+Herbivore_inv <- inspecting %>% 
+  filter(Trophic.group == "Herbivore")
+
+herb_inv <- glmmTMB(inspecting ~ Area + (1|Site) + (1|Replicate), data=Herbivore_inv,
+                    family = poisson(link = "log"))
+summary(herb_inv)
+Anova(herb_inv)
+
+herb_inv_res_domes <- simulateResiduals(herb_inv)
+plot(herb_inv_res_domes) # Good!
+
+
+planktivore_inv <- inspecting %>% 
+  filter(Trophic.group == "Planktivore")
+
+plank_inv <- glmmTMB(inspecting ~ Area + (1|Site) + (1|Replicate), data=planktivore_inv,
+family = poisson(link = "log"))
+
+summary(plank_inv)
+Anova(plank_inv)
+
+plank_inv_res_domes <- simulateResiduals(plank_inv)
+plot(plank_inv_res_domes) # Good!
+
+
+
+##################Attack - squidpop vs dome ####
+
+
+attack_squid <- attack_squid %>% 
+  filter(Trophic.group != "Invertivore")
+
+attack_squid$Replicate <- factor(attack_squid$Replicate)
+
+attack_squid_glmm <- glmmTMB (attack ~ Method*Trophic.group + (1|Site) + (1|Replicate),  data=attack_squid, 
+                              family = poisson(link = "log")) 
+
+summary(attack_squid_glmm) # Doesn't work!
+Anova(attack_squid_glmm)
+
+attack_squid_glmm_res_domes <- simulateResiduals(attack_squid_glmm)
+plot(attack_squid_glmm_res_domes) # Good!
+
+#lets do post hoc tests
+
+pairs(emmeans(attack_squid_glmm,spec=~Method|Trophic.group, type="response")) # Piscivores - p:0.02
+
+## (try per group but shouldn't add more info)
+
+### investigating - domes/squidpops
+
+inspect_squid_glmm <- glmmTMB (inspecting ~ Method*Trophic.group  + (1|Site) + (1|Replicate), data=inspecting_squid, 
+                               family = poisson(link = "log")) 
+
+
+summary(inspect_squid_glmm)
+Anova(inspect_squid_glmm) #Significant - p=0.002
+
+inspec_res_squid <- simulateResiduals(inspect_squid_glmm)
+plot(inspec_res_squid) # Good!
+
+
+### Try per trophic group separated in individual models and
+## that's it 
+
+
+######################################################################
+
+
+
+
+### investigating - domes ####
+
+## There are problems with GLMM
+
+insepect_domes <- glmmTMB (inspecting ~ Area*Trophic.group + (1|Site), data=inspecting, 
+                           family = poisson(link = "log")) 
+
+summary(insepect_domes)
+Anova(insepect_domes) #Significant - p=0.00014
+
+inspec_res_domes <- simulateResiduals(insepect_domes)
+plot(inspec_res_domes) # Good!  
+
+#lets do post hoc tests
+
+pairs(emmeans(insepect_domes,spec=~Area|Trophic.group, type="response")) # Piscivores - p:0.02
+
+## Let's try with ANOVA
+
+#Let's try just one trophic group per time. 
+
+piscivores_inv <- inspecting %>% 
+  filter(Trophic.group == "Piscivore")
+
+pisc_inv <- aov (log(inspecting + 1) ~ Area + Site, data=piscivores_inv)
+
+summary(pisc_inv)
+
+Omnivore_inv <- inspecting %>% 
+  filter(Trophic.group == "Omnivore")
+
+omn_inv <- aov(log(inspecting + 1)~ Area + Site, data=Omnivore_inv)
+summary(omn_inv)
+
+Herbivore_inv <- inspecting %>% 
+  filter(Trophic.group == "Herbivore")
+
+herb_inv <- aov(log(inspecting + 1)~ Area + Site, data=Herbivore_inv)
+summary(herb_inv)
+
+planktivore_inv <- inspecting %>% 
+  filter(Trophic.group == "Planktivore")
+
+plank_inv <- aov(log(inspecting + 1)~ Area + Site, data=planktivore_inv)
+summary(plank_inv)
+
+
+
+### Attacks - domes/squidpops ####
+
+attack_squid <- attack_squid %>% 
+  filter(Trophic.group != "Invertivore")
+
+attack_squid_glmm <- glmmTMB (attack ~ Method*Trophic.group + (1|Site),  data=attack_squid, 
+                              family = poisson(link = "log")) 
+
+## Let's try ANOVA 
+
+
+summary(attack_squid_glmm) # Doesn't work!
+
+attack_squid_aov <- aov(log(attack +1) ~ Method + Site, data = attack_squid)
+
+summary(attack_squid_aov)
+
+attack_squid_plank <- attack_squid %>% 
+  filter(Trophic.group == "Planktivore")
+
+attack_squid_plank_aov <- aov(log(attack +1) ~ Method , data = attack_squid_plank)
+
+summary(attack_squid_plank_aov)#p=0.002
+
+par(mfrow = c(1, 2)) # This code put two plots in the same window
+hist(attack_squid_plank_aov$residuals)
+plot(attack_squid_plank_aov, which = 2)
+
+plot(attack_squid_plank_aov, which = 1) # I think this is not great
+
+
+attack_squid_omn <- attack_squid %>% 
+  filter(Trophic.group == "Omnivore")
+
+attack_squid_omn_aov <- aov(log(attack +1) ~ Method , data = attack_squid_omn)
+
+summary(attack_squid_omn_aov)
+
+attack_squid_pis <- attack_squid %>% 
+  filter(Trophic.group == "Piscivore")
+
+attack_squid_pis_aov <- aov(log(attack +1) ~ Method , data = attack_squid_pis)
+
+summary(attack_squid_pis_aov)
+
+
+### investigating - domes/squidpops
+
+inspect_squid_glmm <- glmmTMB (inspecting ~ Method + Trophic.group , ziformula = ~1, data=inspecting_squid, 
+                               family = poisson(link = "log")) 
+
+
+summary(inspect_squid_glmm)
+Anova(inspect_squid_glmm) #Significant - p=0.002
+
+inspec_res_squid <- simulateResiduals(inspect_squid_glmm)
+plot(inspec_res_squid) # Residuals not good
+
+## This one works but the residuals are not good
+
+## Let's try ANOVA 
+
+inspecting_squid_plank <- inspecting_squid %>% 
+  filter(Trophic.group == "Planktivore")
+
+inspecting_squid_plank_aov <- aov(log(inspecting +1) ~ Method , data = inspecting_squid_plank)
+
+summary(inspecting_squid_plank_aov)
+
+par(mfrow = c(1, 2)) # This code put two plots in the same window
+hist(inspecting_squid_plank_aov$residuals)
+plot(inspecting_squid_plank_aov, which = 2)
+
+plot(inspecting_squid_plank_aov, which = 1) # I think this is not great
+
+
+inspecting_squid_omn <- inspecting_squid %>% 
+  filter(Trophic.group == "Omnivore")
+
+inspecting_squid_omn_aov <- aov(log(inspecting +1) ~ Method , data = inspecting_squid_omn)
+
+summary(inspecting_squid_omn_aov)
+
+inspecting_squid_pis <- inspecting_squid %>% 
+  filter(Trophic.group == "Piscivore")
+
+inspecting_squid_pis_aov <- aov(log(inspecting +1) ~ Method , data = inspecting_squid_pis)
+
+summary(inspecting_squid_pis_aov)
+
+
+##### Let's try lmer #####
+
+### Attack - domes
+
+attack <- attack %>% 
+  filter(Trophic.group != "Planktivore",
+         Trophic.group != "Invertivore")
+
+
+attack_domes <- lmer(log(attack + 1) ~ Area*Trophic.group + (1|Site), data = attack)
+
+Anova(attack_domes, type = "II")
+
+plot(attack_domes) # Still fan-shape?
+
+emmeans(attack_domes, list(pairwise ~Area*Trophic.group), adjust = "tukey")
+
+pairs(emmeans(attack_domes=~Area|Trophic.group, type="response")) # Not working
+pairs(emmeans(attack_domes=~Trophic.group:Area, type="response"))
+
+### investigating - domes 
+
+inv_domes <- lmer(log(inspecting + 1) ~ Area*Trophic.group + (1|Site), data = inspecting)
+
+Anova(inv_domes, type = "II")
+
+plot(inv_domes) # Good!
+
+
+emmeans(inv_domes, list(pairwise ~Area*Trophic.group), adjust = "tukey")
+#I'm surprise there are not differences between i.e., piscivores between Lizard and Sydney
+
+pairs(emmeans(inv_domes=~Area|Trophic.group, type="response")) # Not working
+pairs(emmeans(attack_domes=~Trophic.group:Area, type="response"))
+
+### Attacks - domes/squidpops ####
+
+attack_squid <- attack_squid %>% 
+  filter(Trophic.group != "Invertivore")
+
+attack_squid_lmer <- lmer(log(attack + 1) ~ Method*Trophic.group + (1|Site), data = attack_squid)
+
+Anova(attack_squid_lmer, type = "II")
+
+plot(attack_squid_lmer) # Good!
+
+emmeans(attack_squid_lmer, list(pairwise ~Method*Trophic.group), adjust = "tukey")
+
+pairs(emmeans(attack_domes=~Area|Trophic.group, type="response")) # Not working
+pairs(emmeans(attack_domes=~Trophic.group:Area, type="response"))
+
+### investigating - domes/squidpops
+
+ins_squid_lmer <- lmer(log(inspecting + 1) ~ Method*Trophic.group + (1|Site), data = inspecting_squid)
+
+Anova(ins_squid_lmer, type = "II")
+
+plot(ins_squid_lmer) # Good!
+
+emmeans(ins_squid_lmer, list(pairwise ~Method*Trophic.group), adjust = "tukey")
+
+
+
+#### Trials ####
 
 ## Let's try a nested ANOVA - first model just with the total community to see if the attacks are different. 
 
@@ -338,76 +1281,47 @@ attack_domes <- aov(attack ~ Area/Site, data = attack)
 
 summary(attack_domes) # Not significant 
 
-attack_res_domes <- simulateResiduals(attack_domes)
-plot(attack_res_domes) # A little bit of dispersion but KS test good.  
+#Because p>0.25, I don't need a nested ANOVA (is this correct?)
 
-#awesome lets do post hoc tests
+attack_domes <- aov(attack ~ Area + Site, data = attack)
 
-pairs(emmeans(attack_domes,spec=~Area|Trophic.group, type="response")) # This looks suspicious to me (all
-# same p values). 
-pairs(emmeans(attack_domes,spec=~Trophic.group|Area, type="response")) # This is also suspicious, 
-## same p values in both areas
+summary(attack_domes)# Same results!
 
-### investigating - domes 
+# Question here: should I delete Site?
 
-insepect_domes <- glmmTMB (inspecting ~ Area + Trophic.group + (1|Site), ziformula = ~1, data=inspecting, 
-                         family = poisson(link = "log")) 
+attack_domes <- aov(attack ~ Area, data = attack)
+summary(attack_domes)# Same results!
 
+hist(attack_domes$residuals) #Lots of zeros so transform
 
-summary(insepect_domes)
-Anova(insepect_domes) #Significant - p=0.00014
+attack_domes <- aov(log(attack +1)~ Area + Site, data = attack)
 
-inspec_res_domes <- simulateResiduals(insepect_domes)
-plot(inspec_res_domes) # Residuals not good??  
+summary(attack_domes)
 
-#lets do post hoc tests
+hist(attack_domes$residuals) # Still not normal 
 
-pairs(emmeans(insepect_domes,spec=~Area|Trophic.group, type="response")) # This looks suspicious to me (all
-# same p values). 
-pairs(emmeans(insepect_domes,spec=~Trophic.group|Area, type="response")) # This is also suspicious, 
-## same p values in both areas
+#Lets try with manyglm
+
+attack <- manyglm(attack ~ Area, family = "tweedie", data = attack)
+
+#Doesn't work
 
 
 
-### Attacks - domes/squidpops 
-
-attack_squid_glmm <- glmmTMB (attack ~ Method + Trophic.group , ziformula = ~1, data=attack_squid, 
-                         family = poisson(link = "log")) 
 
 
-summary(attack_squid_glmm)
-Anova(attack_squid_glmm) #Significant - p<0.0005
-
-attack_res_squid <- simulateResiduals(attack_squid_glmm)
-plot(attack_res_squid) # Residuals don't look great  
-
-#awesome lets do post hoc tests
-
-pairs(emmeans(attack_squid_glmm,spec=~Method|Trophic.group, type="response")) # This looks suspicious to me (all
-# same p values). 
-pairs(emmeans(attack_squid_glmm,spec=~Trophic.group|Method, type="response")) # This is also suspicious, 
-## same p values in both methods
-
-### investigating - domes/squidpops
-
-inspect_squid_glmm <- glmmTMB (inspecting ~ Method + Trophic.group , ziformula = ~1, data=inspecting_squid, 
-                           family = poisson(link = "log")) 
 
 
-summary(inspect_squid_glmm)
-Anova(inspect_squid_glmm) #Significant - p=0.002
 
-inspec_res_squid <- simulateResiduals(inspect_squid_glmm)
-plot(inspec_res_squid) # Residuals not good??  
 
-#lets do post hoc tests
 
-pairs(emmeans(inspect_squid_glmm,spec=~Method|Trophic.group, type="response")) # This looks suspicious to me (all
-# same p values). 
-pairs(emmeans(inspect_squid_glmm,spec=~Trophic.group|Method, type="response")) # This is also suspicious, 
-## same p values in both areas
 
-### Attacks - domes 
+
+
+## mvabund #####
+
+
+### Attacks - domes ####
 
 # # Pivot_wider the data to use it in mvabund
 
@@ -622,3 +1536,31 @@ test <- anova(mod2, p.uni = "adjusted")
 
 
 
+
+
+
+## Let's try nMDS ####
+
+### Attacks - domes ##
+
+# # Pivot_wider the data 
+
+attack_dome_stats <- attack %>% 
+  group_by (Trophic.group) %>% 
+  mutate(row=row_number()) %>% 
+  pivot_wider(names_from = Trophic.group, values_from = attack) %>% 
+  dplyr::select(-row) %>% 
+  replace(is.na(.),0) %>% 
+  dplyr:: select(-Invertivore, -Planktivore)
+
+
+# Sub-setting the variables
+
+categories <- attack_dome_stats[, 5:7]
+
+library(vegan)
+
+attack_dome_stats.mds <- metaMDS(comm = categories, 
+distance = "bray", trace = FALSE, autotransform = FALSE)
+
+## SO many zeros! Not sure I can do this

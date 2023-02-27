@@ -1,0 +1,61 @@
+Site,Time ,Method,Treatment,Replicate,Area,Species,Trophic group,maxN
+Malabar 2,1,Dome,Fish,1,Sydney,Prionurus microlepidotus,Herbivore,1
+Malabar 2,1,Dome,Fish,1,Sydney,Aplodactylus lophodon,Herbivore,1
+Malabar 2,1,Dome,Fish,1,Sydney,Cheilodactylus fuscus,Invertivore,2
+Malabar 2,1,Dome,Fish,1,Sydney,Dinolestes lewini,Piscivore,1
+Malabar 2,1,Dome,Fish,1,Sydney,Labridae,Invertivore,1
+Malabar 2,1,Dome,Fish,1,Sydney,Notolabrus gymnogenis,Invertivore,1
+Malabar 2,1,Dome,Fish,1,Sydney,Ophthalmolepis lineolatus,Invertivore,1
+Malabar 2,1,Dome,Fish,1,Sydney,Nelusetta ayraud,Omnivore,6
+Malabar 2,1,Dome,Fish,1,Sydney,Mullidae,Invertivore,1
+Malabar 2,1,Dome,Fish,1,Sydney,Parupeneus spilurus,Invertivore,19
+Malabar 2,1,Dome,Fish,1,Sydney,Parma microlepis,Herbivore,1
+Malabar 2,1,Dome,Fish,1,Sydney,Atypichthys strigatus,Planktivore,9
+Malabar 2,1,Dome,Fish,1,Sydney,Scorpis lineolata,Planktivore,1
+Malabar 2,1,Dome,Fish,1,Sydney,Hypoplectrodes nigroruber,Invertivore,1
+Malabar 2,1,Dome,Fish,2,Sydney,Aplodactylus lophodon,Herbivore,1
+Malabar 2,1,Dome,Fish,2,Sydney,Cheilodactylus fuscus,Invertivore,1
+Malabar 2,1,Dome,Fish,2,Sydney,Dasyatis thetidis,Piscivore,1
+Malabar 2,1,Dome,Fish,2,Sydney,Girella tricuspidata,Herbivore,2
+Malabar 2,1,Dome,Fish,2,Sydney,Labridae,Invertivore,5
+Malabar 2,1,Dome,Fish,2,Sydney,Achoerodus viridis,Invertivore,1
+Malabar 2,1,Dome,Fish,2,Sydney,Notolabrus gymnogenis,Invertivore,1
+Malabar 2,1,Dome,Fish,2,Sydney,Ophthalmolepis lineolatus,Invertivore,1
+Malabar 2,1,Dome,Fish,2,Sydney,Meuschenia trachylepis,Omnivore,1
+Malabar 2,1,Dome,Fish,2,Sydney,Nelusetta ayraud,Omnivore,3
+Malabar 2,1,Dome,Fish,2,Sydney,Mullidae,Invertivore,2
+Malabar 2,1,Dome,Fish,2,Sydney,Parupeneus spilurus,Invertivore,3
+Malabar 2,1,Dome,Fish,2,Sydney,Pomacentridae,Herbivore,1
+Malabar 2,1,Dome,Fish,2,Sydney,Parma microlepis,Herbivore,2
+Malabar 2,1,Dome,Fish,2,Sydney,Atypichthys strigatus,Planktivore,2
+Malabar 2,2,Dome,Fish,1,Sydney,Nelusetta ayraud,Omnivore,4
+Malabar 2,2,Dome,Fish,1,Sydney,Atypichthys strigatus,Planktivore,13
+Malabar 2,2,Dome,Fish,1,Sydney,Scorpis lineolata,Planktivore,4
+Malabar 2,2,Dome,Fish,1,Sydney,Labridae,Invertivore,1
+Malabar 2,2,Dome,Fish,1,Sydney,Cheilodactylus fuscus,Invertivore,1
+Malabar 2,2,Dome,Fish,2,Sydney,Nelusetta ayraud,Omnivore,3
+Malabar 2,2,Dome,Fish,2,Sydney,Parupeneus spilurus,Invertivore,15
+Malabar 2,2,Dome,Fish,2,Sydney,Atypichthys strigatus,Planktivore,4
+Malabar 3,1,Squidpop,Fish,1,Malabar,Atypichthys strigatus,Planktivore,12
+Malabar 3,1,Squidpop,Fish,1,Malabar,Labridae,Invertivore,1
+Malabar 3,1,Squidpop,Fish,1,Malabar,Meuschenia scaber,Omnivore,1
+Malabar 3,1,Squidpop,Fish,1,Malabar,Schuettea scalaripinnis,Planktivore,2
+Malabar 3,1,Squidpop,Fish,2,Malabar,Mullidae,Invertivore,1
+Malabar 3,1,Squidpop,Fish,2,Malabar,Parupeneus spilurus,Invertivore,20
+Malabar 3,1,Squidpop,Fish,1,Malabar,Rhabdosa sarba,Invertivore,1
+Malabar 3,2,Squidpop,Fish,2,Malabar,Dasyatis thetidis,Piscivore,1
+Malabar 3,2,Squidpop,Fish,2,Malabar,Dinolestes lewini,Piscivore,3
+Malabar 3,2,Squidpop,Fish,2,Malabar,Labridae,Invertivore,1
+Malabar 3,2,Squidpop,Fish,2,Malabar,Achoerodus viridis,Invertivore,1
+Malabar 3,2,Squidpop,Fish,1,Malabar,Notolabrus gymnogenis,Invertivore,1
+Malabar 3,2,Squidpop,Fish,1,Malabar,Meuschenia trachylepis,Omnivore,1
+Malabar 3,2,Squidpop,Fish,1,Malabar,Mullidae,Invertivore,1
+Malabar 3,2,Squidpop,Fish,2,Malabar,Parupeneus spilurus,Invertivore,3
+Malabar 3,2,Squidpop,Fish,1,Malabar,Upeneichthys lineatus,Invertivore,1
+Malabar 3,2,Squidpop,Fish,2,Malabar,Atypichthys strigatus,Planktivore,13
+Malabar 3,2,Squidpop,Fish,2,Malabar,Rhabdosa sarba,Invertivore,1
+Malabar 3,3,Squidpop,Fish,1,Malabar,Atypichthys strigatus,Planktivore,2
+Malabar 3,3,Squidpop,Fish,2,Malabar,Achoerodus viridis,Invertivore,1
+Malabar 3,3,Squidpop,Fish,1,Malabar,Brachaluteres jacksonianus,Omnivore,1
+Malabar 3,3,Squidpop,Fish,2,Malabar,Upeneichthys lineatus,Invertivore,1
+Malabar 3,3,Squidpop,Fish,1,Malabar,Rhabdosa sarba,Invertivore,1

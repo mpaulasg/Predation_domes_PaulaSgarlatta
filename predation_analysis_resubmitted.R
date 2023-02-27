@@ -4,13 +4,13 @@
 ##
 ## Code by Paula Sgarlatta
 ##
-##  1- Map of study sites
+##  1- Fig. 1 - Map of study sites
 ##
-##  2- Fig. Comparison between tropics and temperate reefs using domes
+##  2- Fig. 3 - Comparison between tropics and temperate reefs using domes
 ##
-##  3- Fig. Comparison between squidpops and domes in Malabar
+##  3- Fig. 4 - Comparison between squidpops and domes in Malabar
 ##
-##  4- Stats
+##  4- Stats (help by Alistair Poore)
 ##
 ################################################################################
 
@@ -32,10 +32,11 @@ library(glmmTMB)
 library(DHARMa)
 library(here)
 
+
 #### 1 - Map of study sites ######
 
 
-sites <- read.csv("data/sites_predation_v2.csv")
+sites <- read.csv("data/sites_predation.csv")
 
 color_type <- c("Dome"= "#d1495b", "Squidpop"= "#edae49")
 
@@ -50,10 +51,6 @@ Lat_predation <- ggplot(data = ozmap(x="states")) +
   coord_sf(xlim = c(142,157), ylim = c(-40,-10), expand = FALSE)+
   geom_point(data=sites, aes(x=Longitude, y=Latitude, 
                                  colour = Data_type, size=2))+
-  # geom_rect(xmin = 150.5, xmax = 152, ymin = -34.5, ymax = -33.5, 
-  #           fill = NA, colour = "black", size = 0.5)+
-   # geom_text(data = city_data, mapping = aes(x=long, y=lat, label=city_name,
-   #           color="red"))+ # can't change the colour
   scale_color_manual(name="Data_type", values=color_type) +
   theme(panel.background = element_rect(fill = "white"),
         legend.position = "none",
@@ -90,9 +87,9 @@ map
 # ggsave(map, file=here::here("graphs", "Figure1.jpeg"),
 #        height = 20, width = 18, unit = "cm")
 
-####### 2- Comparison between tropical and temperate reefs using domes #####
+####### 2- Fig. 3 - Comparison between tropical and temperate reefs using domes #####
 
-data <- read.csv(here:: here("data/data_predation_squidpops_v2.csv"))
+data <- read.csv(here:: here("data/data_predation.csv"))
 
 #Filter first for dome comparison
 
@@ -122,12 +119,6 @@ inspecting <- data_domes %>%
 # 
 attack_toplot<- Rmisc::summarySE(attack, na.rm= T, measurevar=c("attack"),
                                          groupvars=c("Area", "Trophic.group"))
-# # 
-# attack_toplot_species<- Rmisc::summarySE(attack_species, na.rm= T, measurevar=c("attack"), 
-#                                  groupvars=c("Area"))
-# 
-# inspecting_toplot<- Rmisc::summarySE(inspecting, na.rm= T, measurevar=c("inspecting"),
-#                                  groupvars=c("Area", "Trophic.group"))
 
 # Color graphs
 
@@ -139,43 +130,37 @@ mytheme <- theme(panel.background=element_rect(fill="white"), panel.grid.minor =
                  legend.key = element_rect(fill = "white"), legend.text = element_text(size=20),
                  legend.title = element_blank(), plot.title = element_text(hjust = -0.05, size = 20, face = "bold"))
 
-plot_attack <- ggplot(attack, aes(x=Trophic.group, y=attack, fill=Area)) +
+plot_attack_dome <- ggplot(attack, aes(x=Trophic.group, y=attack, fill=Area)) +
   geom_boxplot()+ 
   scale_y_continuous(trans="log1p")+
   geom_point(shape = 21, position = position_jitterdodge(jitter.width = 0.1), size = 2) +
   scale_fill_manual(name="Area", values=dome_colours) +
-  # scale_x_discrete(labels=c("Herbivore"="Herb", "Invertivore"="Inv", "Omnivore"="Omn",
-  #                           "Piscivore"="Pisc", "Planktivore"="Plank"),
-  #                  guide = guide_axis(n.dodge = 2))+
   labs(x="", y="Attack per hour") +
   mytheme + theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust=1))+
   ggtitle(("a)"))
 
-plot_attack
+plot_attack_dome
 
-# ggsave(plot_attack, file=here::here("graphs/Figure_attack.jpeg"),
+# ggsave(plot_attack_dome, file=here::here("graphs/Figure_attack_dome.jpeg"),
 # height = 16, width = 24, unit = "cm" )
 
-plot_inspecting <- ggplot(inspecting,aes(x=Trophic.group, y=inspecting, fill=Area)) +
+plot_inspection_dome <- ggplot(inspecting,aes(x=Trophic.group, y=inspecting, fill=Area)) +
   geom_boxplot()+ 
   scale_y_continuous(trans="log1p", limits = c(0,20), breaks = seq(from=0, to=20, by=5))+
   geom_point(shape = 21, position = position_jitterdodge(jitter.width = 0.1), size = 2) +
   scale_fill_manual(name="Area", values=dome_colours) +
-  # scale_x_discrete(labels=c("Herbivore"="Herb", "Invertivore"="Inv", "Omnivore"="Omn",
-  #                           "Piscivore"="Pisc", "Planktivore"="Plank"),
-  #                  guide = guide_axis(n.dodge = 2))+
-  labs(x="", y="Inspecting per hour") +
+  labs(x="", y="Inspection per hour") +
   mytheme +theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust=1))+
   ggtitle(("b)"))
 
-plot_inspecting
+plot_inspection_dome
 
-# ggsave(plot_inspecting, file=here::here("graphs/Figure_inspecting.jpeg"),
+# ggsave(plot_inspection_dome, file=here::here("graphs/Figure_inspection_dome.jpeg"),
 #        height = 16, width = 24, unit = "cm" )
 
 #Now all together 
 
-figure_3 <-ggarrange(plot_attack, plot_inspecting, 
+figure_3 <-ggarrange(plot_attack_dome, plot_inspection_dome, 
                      ncol = 2, nrow = 1)
 
 figure_3
@@ -185,11 +170,11 @@ figure_3
 #  height = 16, width = 24, unit = "cm" )
 
 
-#### Now comparing with squidpops ##########
+#### Fig. 4 - Comparison between squidpops and domes in Malabar
 
 method_colours <- c(Dome = "#91BBDE", "Squidpop" = "#214B6E")
 
-data_squid <- data %>% 
+data_squid_dome <- data %>% 
  dplyr:: filter (Area != "Lizard Island", 
           Site != "Malabar 1 ",
           Treatment != "No_fish") %>% 
@@ -198,7 +183,7 @@ data_squid <- data %>%
                             "Herbivore", "Invertivore", "Omnivore", "Piscivore",
                             "Planktivore"))
 
-attack_squid <- data_squid %>%
+attack_squid_dome <- data_squid_dome %>%
   dplyr::group_by(Method,Site,Replicate,Time,Trophic.group)%>% # sum everything in the transect by species
   dplyr::summarise(attack=sum(attack_number,na.rm=T))%>% 
   ungroup%>% 
@@ -206,7 +191,7 @@ attack_squid <- data_squid %>%
   replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
   glimpse()
 
-inspecting_squid <- data_squid %>%
+inspection_squid_dome <- data_squid_dome %>%
   dplyr::group_by(Method,Site,Replicate,Time, Trophic.group)%>% 
   dplyr::summarise(inspecting=sum(inspecting_hour,na.rm=T))%>% 
   ungroup%>% 
@@ -215,54 +200,83 @@ inspecting_squid <- data_squid %>%
   glimpse()
 
 
-attack_squid_toplot<- Rmisc::summarySE(attack_squid, na.rm= T, measurevar=c("attack"),
-                                 groupvars=c("Method", "Trophic.group"))
-
-inspect_squid_toplot<- Rmisc::summarySE(inspecting_squid, na.rm= T, measurevar=c("inspecting"),
-                                       groupvars=c("Method", "Trophic.group"))
-
-plot_attack_squid <- ggplot(attack_squid, aes(x=Trophic.group, y=attack, fill=Method)) +
+plot_attack_squid_dome <- ggplot(attack_squid_dome, aes(x=Trophic.group, y=attack, fill=Method)) +
   geom_boxplot()+ 
   scale_y_continuous(trans="log1p")+
   geom_point(shape = 21, position = position_jitterdodge(jitter.width = 0.1), size=2) +
   scale_fill_manual(name = "Method", values=method_colours) + 
-  # scale_x_discrete(labels=c("Herbivore"="Herb", "Invertivore"="Inv", "Omnivore"="Omn",
-  #                           "Piscivore"="Pisc", "Planktivore"="Plank"),
-  #                  guide = guide_axis(n.dodge = 2))+
   labs(x="", y="Attack per hour") +
   mytheme+ theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust=1))+
   ggtitle("a)")
 
-plot_attack_squid
+plot_attack_squid_dome
 
-# ggsave(plot_attack_squid, file=here::here("graphs/Figure_squid_dome.jpeg"),
+# ggsave(plot_attack_squid_dome, file=here::here("graphs/Figure_attack_squid_dome.jpeg"),
 #        height = 22, width = 25, unit = "cm" )
 
-plot_inspect_squid <- ggplot(inspecting_squid, aes(x=Trophic.group, y=inspecting, fill=Method)) +
+plot_inspect_squid_dome <- ggplot(inspection_squid_dome, aes(x=Trophic.group, y=inspecting, fill=Method)) +
   geom_boxplot()+ 
   geom_point(shape = 21, position = position_jitterdodge(jitter.width = 0.1), size=2) +
   scale_fill_manual(name = "Method", values=method_colours)+
-  # scale_x_discrete(labels=c("Herbivore"="Herb", "Invertivore"="Inv", "Omnivore"="Omn",
-  #                           "Piscivore"="Pisc", "Planktivore"="Plank"),
-  #                  guide = guide_axis(n.dodge = 2))+
-  labs(x="", y="Inspecting per hour") +
+  labs(x="", y="Inspection per hour") +
   mytheme+ 
   theme (legend.position = "none", axis.text.x = element_text(angle = 45, hjust=1))+
   ggtitle(("b)"))
 
-plot_inspect_squid
+plot_inspect_squid_dome
 
-# ggsave(plot_inspect_squid, file=here::here("graphs/Figure_inspect_squid_nolegend.jpeg"),
+# ggsave(plot_inspect_squid_dome, file=here::here("graphs/Figure_inspect_squid_dome.jpeg"),
 #        height = 22, width = 25, unit = "cm" )
 
 #Now all together 
 
-figure_4 <-ggarrange(plot_attack_squid, plot_inspect_squid, 
+figure_4 <-ggarrange(plot_attack_squid_dome, plot_inspect_squid_dome, 
           ncol = 2, nrow = 1)
 
 figure_4
 
 # ggsave(figure_4, file=here::here("graphs/Figure_4.jpeg"),
+# height = 16, width = 24, unit = "cm" )
+
+
+### Fig. 4b - Comparison between squidpops and domes in Malabar - MaxN
+
+
+data_squid_dome_maxN <- read.csv(here:: here("data/data_maxN.csv")) %>% 
+  mutate(Trophic.group = fct_relevel(Trophic.group, 
+                                     "Herbivore", "Invertivore", "Omnivore", "Piscivore",
+                                     "Planktivore"))
+
+maxN_squid_dome <- data_squid_dome_maxN %>%
+  dplyr::group_by(Method,Site,Replicate,Time,Trophic.group)%>% # sum everything in the transect by species
+  dplyr::summarise(maxN=sum(maxN,na.rm=T))%>% 
+  ungroup%>% 
+  tidyr::complete(Trophic.group, nesting(Method, Site,Replicate,Time),fill= list(maxN=0)) %>% 
+  replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+  glimpse()
+
+plot_maxN_squid_dome <- ggplot(maxN_squid_dome, aes(x=Trophic.group, y=maxN, fill=Method)) +
+  geom_boxplot()+ 
+  #scale_y_continuous(trans="log1p")+
+  geom_point(shape = 21, position = position_jitterdodge(jitter.width = 0.1), size=2) +
+  scale_fill_manual(name = "Method", values=method_colours) + 
+  labs(x="", y="maxN per hour") +
+  mytheme+ theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust=1))+
+  ggtitle("c)")
+
+plot_maxN_squid_dome
+
+# ggsave(plot_maxN_squid_dome, file=here::here("graphs/Figure_maxN_squid_dome.jpeg"),
+#        height = 22, width = 25, unit = "cm" )
+
+#Now all together 
+
+figure_4 <-ggarrange(plot_attack_squid_dome, plot_inspect_squid_dome, plot_maxN_squid_dome,
+                     ncol = 2, nrow = 2)
+
+figure_4
+
+# ggsave(figure_4, file=here::here("graphs/Figure_4_v2.jpeg"),
 # height = 16, width = 24, unit = "cm" )
 
 
@@ -284,7 +298,7 @@ data_domes <- data %>%
 data_domes <- unite(data_domes, rep_ID, c("Site", "Replicate", "Time"), sep = "_", remove = FALSE)
 
 attack_number <- data_domes %>%
-  dplyr::group_by(Area,Site, rep_ID,Time, Trophic.group)%>% # sum everything in the transect by species
+  dplyr::group_by(Area,Site, rep_ID,Time, Trophic.group, total_video_min)%>% # sum everything in the transect by species
   dplyr::summarise(attack=sum(attack_number,na.rm=T))%>% 
   ungroup%>% 
   tidyr::complete(Trophic.group, nesting(Area, Site, rep_ID,Time),fill= list(attack=0)) %>% 
@@ -292,12 +306,12 @@ attack_number <- data_domes %>%
   glimpse()
 
 attack_number <- data_domes %>%
-  dplyr::group_by(Area,Site, rep_ID,Time)%>% # sum everything in the transect by species
+  dplyr::group_by(Area,Site, rep_ID,Time, total_video_min)%>% # sum everything in the transect by species
   dplyr::summarise(attack=sum(attack_number,na.rm=T))
-  # ungroup%>% 
-  # tidyr::complete(Species, nesting(Area, Site, rep_ID,Time),fill= list(attack=0)) %>% 
-  # replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
-  # glimpse()
+# ungroup%>% 
+# tidyr::complete(Species, nesting(Area, Site, rep_ID,Time),fill= list(attack=0)) %>% 
+# replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+# glimpse()
 
 inspecting_number <- data_domes %>%
   dplyr::group_by(Area,Site,rep_ID,Time,Trophic.group)%>% 
@@ -316,20 +330,28 @@ inspecting_number <- data_domes %>%
   glimpse()
 
 
-  ############# Trying with GLMM - Attacks domes 
-  
-  mod1 <- glmmTMB (attack   ~ Area + (1|Site) + (1|rep_ID),
-                           data=attack_number, family = nbinom1()) 
-  
-  summary(mod1)
-  
-  Anova(mod1) # p=0.28 Area , p<0.0001 trophic group
-  
-  
-  attack_res_domes <- simulateResiduals(mod1)
-  plot(attack_res_domes) #Good
-  
-  
+############# Trying with GLMM - Attacks domes 
+
+# min_val <- attack_hour %>% 
+#   dplyr::select(attack) %>% 
+#   dplyr::filter(attack>0)
+
+# min_val <- min(min_val$attack)/2 
+# 
+# attack_hour <- attack_hour %>% mutate(zooBiomass = attack + min_val) %>%
+#   drop_na(attack)# Make new log-transformed variable and add half the minimum value
+
+mod1 <- glmmTMB (attack   ~ Area + (1|Site) + (1|rep_ID) + offset (total_video_min),
+                 data=attack_number, family = tweedie()) 
+
+summary(mod1)
+
+Anova(mod1) # p=0.28 Area , p<0.0001 trophic group
+
+
+attack_res_domes <- simulateResiduals(mod1)
+plot(attack_res_domes) #Good
+
   
   attack_number_total<- data_domes %>%
     dplyr::group_by(Area,Site, rep_ID,Time)%>% # sum everything in the transect by species
@@ -373,7 +395,15 @@ inspecting_number <- data_domes %>%
   
   ####Let's try just one trophic group per time
   
-  piscivores <- attack_number %>% 
+  attack_hour <- data_domes %>%
+    dplyr::group_by(Area,Site, rep_ID,Time, Trophic.group)%>% # sum everything in the transect by species
+    dplyr::summarise(attack=sum(attack_hour,na.rm=T))%>% 
+    ungroup%>% 
+    tidyr::complete(Trophic.group, nesting(Area, Site, rep_ID,Time),fill= list(attack=0)) %>% 
+    replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+    glimpse()
+  
+  piscivores <- attack_hour %>% 
     filter(Trophic.group == "Piscivore")
   
   pisc <- glmmTMB (attack ~ Area + (1|Site)+ (1|rep_ID), data=piscivores, 
@@ -1528,3 +1558,4 @@ figure_3
 
 ggsave(figure_3, file=here::here("graphs/Figure_3_new.jpeg"),
        height = 16, width = 24, unit = "cm" )
+

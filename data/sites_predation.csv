@@ -1,7 +1,4 @@
 Site,Latitude,Longitude,Data_type
-Blue Lagoon,-14.688,145.45892,Dome
-North Palfrey Island,-14.69011,145.44264,Dome
-Malabar Site 1,-33.96787,151.255893,Dome
-Malabar Site 2,-33.965207,151.25528,Dome
-Malabar Site 3,-33.965074,151.252359,Squidpop
-Malabar ,-34,151.252359,Dome
+Lizard Island,-14.688,145.45892,Dome
+Malabar Dome,-34,151.5,Dome
+Malabar Squid,-33.965207,151.252359,Squidpop

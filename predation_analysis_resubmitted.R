@@ -282,7 +282,7 @@ figure_4
 
 ######## Stats ########
 
-data <- read.csv(here:: here("data/data_predation_squidpops_v2.csv"))
+data <- read.csv(here:: here("data/data_predation.csv"))
 
 ### Attacks - domes 
 
@@ -297,66 +297,143 @@ data_domes <- data %>%
 
 data_domes <- unite(data_domes, rep_ID, c("Site", "Replicate", "Time"), sep = "_", remove = FALSE)
 
+
+######### Option with offset 
+
 attack_number <- data_domes %>%
-  dplyr::group_by(Area,Site, rep_ID,Time, Trophic.group, total_video_min)%>% # sum everything in the transect by species
+  dplyr::group_by(Area,Site, rep_ID,Time, Trophic.group, total_video_min)%>% 
   dplyr::summarise(attack=sum(attack_number,na.rm=T))%>% 
   ungroup%>% 
-  tidyr::complete(Trophic.group, nesting(Area, Site, rep_ID,Time),fill= list(attack=0)) %>% 
-  replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
-  glimpse()
-
-attack_number <- data_domes %>%
-  dplyr::group_by(Area,Site, rep_ID,Time, total_video_min)%>% # sum everything in the transect by species
-  dplyr::summarise(attack=sum(attack_number,na.rm=T))
-# ungroup%>% 
-# tidyr::complete(Species, nesting(Area, Site, rep_ID,Time),fill= list(attack=0)) %>% 
-# replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
-# glimpse()
-
-inspecting_number <- data_domes %>%
-  dplyr::group_by(Area,Site,rep_ID,Time,Trophic.group)%>% 
-  dplyr::summarise(inspecting=sum(inspecting_number,na.rm=T))%>% 
-  ungroup%>% 
-  tidyr::complete(Trophic.group, nesting(Area, Site,rep_ID,Time),fill= list(inspecting=0)) %>% 
+  tidyr::complete(Trophic.group, nesting(Area, Site, rep_ID,Time, total_video_min),fill= list(attack=0)) %>% 
   replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
   glimpse()
 
 inspecting_number <- data_domes %>%
-  dplyr::group_by(Area,Site,rep_ID,Time,Species)%>% 
+  dplyr::group_by(Area,Site,rep_ID,Time,Trophic.group, total_video_min)%>% 
   dplyr::summarise(inspecting=sum(inspecting_number,na.rm=T))%>% 
   ungroup%>% 
-  tidyr::complete(Species, nesting(Area, Site,rep_ID,Time),fill= list(inspecting=0)) %>% 
+  tidyr::complete(Trophic.group, nesting(Area, Site,rep_ID,Time, total_video_min),fill= list(inspecting=0)) %>% 
   replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
   glimpse()
 
-
-############# Trying with GLMM - Attacks domes 
-
-# min_val <- attack_hour %>% 
-#   dplyr::select(attack) %>% 
-#   dplyr::filter(attack>0)
-
-# min_val <- min(min_val$attack)/2 
-# 
-# attack_hour <- attack_hour %>% mutate(zooBiomass = attack + min_val) %>%
-#   drop_na(attack)# Make new log-transformed variable and add half the minimum value
 
 mod1 <- glmmTMB (attack   ~ Area + (1|Site) + (1|rep_ID) + offset (total_video_min),
-                 data=attack_number, family = tweedie()) 
+                 data=attack_number, family = nbinom2()) 
 
 summary(mod1)
 
-Anova(mod1) # p=0.28 Area , p<0.0001 trophic group
-
+Anova(mod1) 
 
 attack_res_domes <- simulateResiduals(mod1)
-plot(attack_res_domes) #Good
+plot(attack_res_domes) #Working with nbinom2!! :)
 
+
+mod2 <- glmmTMB (inspecting ~ Area + (1|Site) + (1|rep_ID) + offset (total_video_min), 
+                 data=inspecting_number, zi=~1, family = poisson()) 
+
+summary(mod2)
+
+Anova(mod2) 
+
+attack_res_domes_mod2 <- simulateResiduals(mod2)
+plot(attack_res_domes_mod2) # Poisson is the one that works best...
+
+####Let's try just one trophic group per time
+
+piscivores <- attack_number %>% 
+  filter(Trophic.group == "Piscivore")
+
+pisc <- glmmTMB (log(attack + 1)  ~ Area + (1|Site)+ (1|rep_ID) + offset (total_video_min), 
+                 data=piscivores, 
+                 family = nbinom2()) 
+
+
+Anova(pisc) #p<0.0001
+
+pis_res_domes <- simulateResiduals(pisc)
+plot(pis_res_domes) # I think is good??
+
+## Investigating per trophic group - HERE
+
+piscivores_inv <- inspecting_number %>% 
+  filter(Trophic.group == "Piscivore")
+
+
+pisc_inv <- glmmTMB(inspecting  ~ Area + (1|Site) + (1|rep_ID) + offset (total_video_min), 
+                    data=piscivores_inv, zi=~1,
+                    family = poisson(link="log"))
+
+summary(pisc_inv)
+Anova(pisc_inv) 
+
+pisc_inv_res_domes <- simulateResiduals(pisc_inv)
+plot(pisc_inv_res_domes) #Not working
+
+
+planktivore_inv <- inspecting_number %>% 
+  filter(Trophic.group == "Planktivore")
+
+plank_inv <- glmmTMB(inspecting ~ Area + (1|Site) + (1|rep_ID) + offset (total_video_min), data=planktivore_inv, zi=~1,
+                     family = nbinom1())
+
+Anova(plank_inv) # p=0.653
+
+plank_inv_res_domes <- simulateResiduals(plank_inv)
+plot(plank_inv_res_domes) # Good!
+
+
+
+
+
+
+#################################################################################################################################################################################################################################  
+ ############ Option with attack-inspection/hour 
+  
+  attack_hour <- data_domes %>%
+    dplyr::group_by(Area,Site, rep_ID,Time, Trophic.group)%>% # sum everything in the transect by species
+    dplyr::summarise(attack=sum(attack_hour,na.rm=T))%>% 
+    ungroup%>% 
+    tidyr::complete(Trophic.group, nesting(Area, Site, rep_ID,Time),fill= list(attack=0)) %>% 
+    replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+    glimpse()
+  
+  inspecting_hour <- data_domes %>%
+    dplyr::group_by(Area,Site,rep_ID,Time,Trophic.group)%>% 
+    dplyr::summarise(inspecting=sum(inspecting_number,na.rm=T))%>% 
+    ungroup%>% 
+    tidyr::complete(Trophic.group, nesting(Area, Site,rep_ID,Time),fill= list(inspecting=0)) %>% 
+    replace(is.na(.), 0)%>% # replace the NaN resulting from dividing 0 by 0 for 0
+    glimpse()
+
+  
+
+  min_val <- attack_hour %>%
+    dplyr::select(attack) %>%
+    dplyr::filter(attack>0)
+  
+  min_val <- min(min_val$attack)/2
+  
+  attack_hour <- attack_hour %>% mutate(attack_min = attack + min_val) %>%
+    drop_na(attack)# Make new variable and add half the minimum value
+  
+
+  
+  mod1 <- glmmTMB ((attack + 1) ~ Area + (1|Site) + (1|rep_ID), 
+                   data=attack_hour, family = tweedie(link = "log")) 
+  
+  summary(mod1)
+  
+  Anova(mod1) # p=0.28 Area , p<0.0001 trophic group
+  
+  
+  attack_res_domes <- simulateResiduals(mod1)
+  plot(attack_res_domes) #Good
+  
   
   attack_number_total<- data_domes %>%
     dplyr::group_by(Area,Site, rep_ID,Time)%>% # sum everything in the transect by species
     dplyr::summarise(attack=sum(attack_number,na.rm=T))
-    
+  
   
   
   mod1 <- glmmTMB (attack   ~ Area + (1|Site) + (1|rep_ID),
@@ -372,9 +449,9 @@ plot(attack_res_domes) #Good
   
   ### Inspecting
   
-
+  
   inspect_domes <- glmmTMB (log(inspecting + 1)  ~ Area + (1|Site) + (1|rep_ID), data=inspecting_number, 
-                             family = nbinom1()) 
+                            family = nbinom1()) 
   
   Anova(inspect_domes) #Area p=0.09
   
@@ -392,6 +469,8 @@ plot(attack_res_domes) #Good
   
   inspec_res_domes <- simulateResiduals(inspect_domes)
   plot(inspec_res_domes) # Good! 
+  
+  ########################################################
   
   ####Let's try just one trophic group per time
   

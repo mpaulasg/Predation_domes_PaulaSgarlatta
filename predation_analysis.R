@@ -268,7 +268,7 @@ figure_4
 
 ######## Stats ########
 
-data <- read.csv(here:: here("data/data_predation_squidpops_v2.csv"))
+data <- read.csv(here:: here("data/data_predation.csv"))
 
 ### Attacks - domes 
 

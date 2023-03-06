@@ -307,26 +307,26 @@ inspecting_number <- data_domes %>%
   dplyr::summarise(inspecting=sum(inspecting_number,na.rm=T))
 
 
-mod1 <- glmmTMB (attack   ~ Area + (1|Site) + (1|rep_ID) + offset (total_video_min), 
+mod1 <- glmmTMB (attack   ~ Area + (1|Site) + (1|rep_ID) + offset (log(total_video_min)), 
                  data=attack_number, family = poisson()) 
 
 summary(mod1)
 
-Anova(mod1) #
+Anova(mod1) # p=0.28
 
 attack_res_domes <- simulateResiduals(mod1)
-plot(attack_res_domes) #Poisson is the best one but still not great
+plot(attack_res_domes) #Good
 
 
-mod2 <- glmmTMB (inspecting ~ Area + (1|Site) + (1|rep_ID) + offset (total_video_min), 
-                 data=inspecting_number, family = nbinom2()) 
+mod2 <- glmmTMB (inspecting ~ Area + (1|Site) + (1|rep_ID) + offset (log(total_video_min)), 
+                 data=inspecting_number, family = nbinom2 ()) 
 
 summary(mod2)
 
-Anova(mod2) 
+Anova(mod2) #p = 0.19
 
 attack_res_domes_mod2 <- simulateResiduals(mod2)
-plot(attack_res_domes_mod2) # Residuals look terrible...
+plot(attack_res_domes_mod2) # Good
 
 ####Let's try just one trophic group per time
 
@@ -342,15 +342,16 @@ attack_total <- data_domes %>%
 piscivores <- attack_total %>% 
   filter(Trophic.group == "Piscivore")
 
-pisc <- glmmTMB (attack ~ Area + (1|Site)+ (1|rep_ID) + offset (total_video_min), 
-                 data=piscivores, zi=~1,
-                 family = nbinom1()) 
+
+pisc <- glmmTMB (attack ~ Area + (1|Site)+ (1|rep_ID) + offset (log(total_video_min)), 
+                 data=piscivores,
+                 family = poisson()) 
 
 
-Anova(pisc) #p=0.16 
+Anova(pisc) #p=0.03
 
 pis_res_domes <- simulateResiduals(pisc)
-plot(pis_res_domes) # I think is good?? - If this is correct, it changes our results
+plot(pis_res_domes) # Good
 
 ## Investigating per trophic group
 
@@ -366,25 +367,24 @@ piscivores_inv <- inspect_total %>%
   filter(Trophic.group == "Piscivore")
 
 
-pisc_inv <- glmmTMB(inspect  ~ Area + (1|Site) + (1|rep_ID) + offset (total_video_min), 
+pisc_inv <- glmmTMB(inspect  ~ Area + (1|Site) + (1|rep_ID) + offset (log(total_video_min)), 
                     data=piscivores_inv, 
-                      zi=~1,
-                    family = nbinom1())
+                    family = poisson())
 
 summary(pisc_inv)
-Anova(pisc_inv) 
+Anova(pisc_inv) # p= 0.0006
 
 pisc_inv_res_domes <- simulateResiduals(pisc_inv)
-plot(pisc_inv_res_domes) #Nbinom1 best one, but still bad
+plot(pisc_inv_res_domes) #Good
 
 
 planktivore_inv <- inspect_total %>% 
   filter(Trophic.group == "Planktivore")
 
-plank_inv <- glmmTMB(inspect ~ Area + (1|Site) + (1|rep_ID) + offset (total_video_min), data=planktivore_inv, zi=~1,
+plank_inv <- glmmTMB(inspect ~ Area + (1|Site) + (1|rep_ID) + offset (log(total_video_min)), data=planktivore_inv, 
                      family = nbinom1())
 
-Anova(plank_inv) # p=0.653
+Anova(plank_inv) # p=0.8923
 
 plank_inv_res_domes <- simulateResiduals(plank_inv)
 plot(plank_inv_res_domes) # Good!
@@ -422,14 +422,14 @@ plot(attack_res_squid) # Good
 
 ############## Inspecting
 
-inspect_squid <- glmmTMB (inspecting    ~ Method + (1|Site) + (1|rep_ID) + offset (total_video_min),
+inspect_squid <- glmmTMB (inspecting    ~ Method + (1|Site) + (1|rep_ID) + offset (log(total_video_min)),
                           data= inspecting_number_squid, 
                           family = poisson()) 
 
 Anova(inspect_squid) # p=0.53
 
 inspec_res_squid <- simulateResiduals(inspect_squid)
-plot(inspec_res_squid) # Good(ish) 
+plot(inspec_res_squid) # Good 
 
 #######Let's try just one trophic group per time. 
 
@@ -455,15 +455,14 @@ attack_total_squid <- data_squid %>%
 Omnivore_squid <- attack_total_squid %>% 
   filter(Trophic.group == "Omnivore")
 
-omn_squid <- glmmTMB(attack   ~ Method + (1|Site) + (1|rep_ID) + offset (total_video_min),  
+omn_squid <- glmmTMB(attack   ~ Method + (1|Site) + (1|rep_ID) + offset (log(total_video_min)),  
                      data = Omnivore_squid, 
-                     family = nbinom2(link = "log"))
+                     family = poisson())
 
-Anova(omn_squid) #p<0.00002 
+Anova(omn_squid) #p=0.009
 
 omn_attack_res_squid <- simulateResiduals(omn_squid)
-plot(omn_attack_res_squid) # This is the best one, but still not good
-
+plot(omn_attack_res_squid) # Good
 
 ## Inspecting
 
@@ -590,7 +589,7 @@ min_val_ins <- inspecting_hour %>%
 
 min_val_ins <- min(min_val_ins$inspecting)/2
 
-inspecting_hour <- inspecting_hour %>% mutate (inspecting_min = inspecting + min_val) %>%
+inspecting_hour <- inspecting_hour %>% mutate (inspecting_min = inspecting + min_val_ins) %>%
   drop_na(inspecting)# Make new variable and add half the minimum value
 
 
@@ -742,19 +741,29 @@ plot(plank_maxN_res) # Not sure this is correct
 
 
 
-
-
 omnivore <- maxN_squid_dome %>% 
   filter(Trophic.group == "Omnivore")
 
-omn_maxN <- glmmTMB(maxN  ~ Method + (1|Site) + (1|rep_ID) + offset (total_video_min),
+omn_maxN <- glmmTMB(maxN_min  ~ Method + (1|Site) + (1|rep_ID),
                     data=omnivore,
-                    family = nbinom2(link = "log"))
+                    family = Gamma())
 
-Anova(omn_maxN) 
+omn_maxN <- glmmTMB(maxN_min  ~ Method + Site ,
+                    data=omnivore,
+                    family = Gamma())
+
+omn_maxN <- aov(maxN_min  ~ Method + Site ,
+                    data=omnivore)
+
+
+summary(omn_maxN) 
+
+plot(omn_maxN, 1)
+leveneTest(maxN_min  ~ Method*Site ,
+            data=omnivore)
 
 omn_maxN_res <- simulateResiduals(omn_maxN)
-plot(omn_maxN_res) # Not working
+plot(omn_maxN_res) # Not sure this is correct
   
   
 

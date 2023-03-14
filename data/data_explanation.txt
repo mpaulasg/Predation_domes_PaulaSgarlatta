@@ -1,4 +1,4 @@
-data_predation_squidpops:
+data_predation:
 
 attack per video: the amount of violents attacks per video
 attack per hour: number of attacks in one hour
@@ -10,5 +10,4 @@ circling per video: the amount of circling per video
 circling per hour: number of circling in one hour
 circling_minutes: sum of minutes that the predator is circling
 
-For squidpops we only have baits, so only number of attacks per hour will be used.
 

@@ -1,4 +1,3 @@
-Site,Latitude,Longitude,Data_type
-Lizard Island,-14.688,145.45892,Dome
-Malabar Dome,-34,151.5,Dome
-Malabar Squid,-33.965207,151.252359,Squidpop
+Site,Latitude,Longitude
+Lizard Island,-14.688,145.45892
+Malabar Dome,-34,151.5

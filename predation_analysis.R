@@ -56,9 +56,6 @@ Lat_predation <- ggplot(data = ozmap(x="states")) +
 
 Lat_predation
 
-# ggsave(Lat_predation, file="graphs/sites_lat_predation.jpeg",
-#        height = 20, width = 18, unit = "cm")
-
 
 #Plot of Australia/rectangle in the area of study
 
@@ -79,8 +76,8 @@ map <- ggdraw(Lat_predation) +
 
 map
 
-# ggsave(map, file=here::here("graphs", "Figure1.jpeg"),
-#        height = 20, width = 18, unit = "cm")
+ggsave(map, file=here::here("graphs", "Figure1.jpeg"),
+       height = 20, width = 18, unit = "cm")
 
 ####### 2- Fig. 3 - Comparison between tropical and temperate reefs using domes #####
 
@@ -135,9 +132,6 @@ plot_attack_dome <- ggplot(attack, aes(x=Trophic.group, y=attack, fill=Area)) +
 
 plot_attack_dome
 
-# ggsave(plot_attack_dome, file=here::here("graphs/Figure_attack_dome.jpeg"),
-# height = 16, width = 24, unit = "cm" )
-
 plot_inspection_dome <- ggplot(inspecting,aes(x=Trophic.group, y=inspecting, fill=Area)) +
   geom_boxplot()+ 
   scale_y_continuous(trans="log1p", limits = c(0,20), breaks = seq(from=0, to=20, by=5))+
@@ -149,9 +143,6 @@ plot_inspection_dome <- ggplot(inspecting,aes(x=Trophic.group, y=inspecting, fil
 
 plot_inspection_dome
 
-# ggsave(plot_inspection_dome, file=here::here("graphs/Figure_inspection_dome.jpeg"),
-#        height = 16, width = 24, unit = "cm" )
-
 #Now all together 
 
 figure_3 <-ggarrange(plot_attack_dome, plot_inspection_dome, 
@@ -160,8 +151,8 @@ figure_3 <-ggarrange(plot_attack_dome, plot_inspection_dome,
 figure_3
 
 
-# ggsave(figure_3, file=here::here("graphs/Figure_3.jpeg"),
-#  height = 16, width = 24, unit = "cm" )
+ggsave(figure_3, file=here::here("graphs/Figure_3.jpeg"),
+ height = 16, width = 24, unit = "cm" )
 
 ######## 3 - Stats ########
 
@@ -199,7 +190,7 @@ summary(domes_inspect)
 Anova(domes_inspect) #p = 0.19
 
 inspect_res_domes <- simulateResiduals(domes_inspect)
-plot(inspect_res_domes) # Good - some issues in graph residual vs, predicted but test n.s
+plot(inspect_res_domes) # Good - some issues in graph residual vs predicted but test n.s
 
 #### Let's try just one trophic group per time ####
 
@@ -228,7 +219,7 @@ Anova(pisc) #p=0.03
 pis_res_domes <- simulateResiduals(pisc)
 plot(pis_res_domes) # Good
 
-#### Investigating per trophic group ####
+#### Inspecting per trophic group ####
 
 inspect_total <- data_domes %>%
   dplyr::group_by(Area,Site, rep_ID,Time, total_video_min, Trophic.group)%>%

@@ -20,12 +20,12 @@ North Palfrey ,2,Dome,Fish,1,Lizard Island,Carcharhinus melanopterus,Piscivore,0
 North Palfrey ,2,Dome,Fish,1,Lizard Island,Carcharhinus melanopterus,Piscivore,1,2.358490566,0.1,0,0,0,25.44
 North Palfrey ,2,Dome,Fish,2,Lizard Island,Lutjanus carponotatus,Piscivore,0,0,0,1,1.355932203,0.1,44.25
 North Palfrey ,2,Dome,Fish,3,Lizard Island,Canthigaster sp,Invertivore,0,0,0,1,1.0978957,0.1,54.65
-North Palfrey ,1,Dome,No_fish,1,Lizard Island,Canthigaster sp,Invertivore,0,0,0,0,0,0,
-North Palfrey ,1,Dome,No_fish,2,Lizard Island,Canthigaster sp,Invertivore,0,0,0,0,0,0,
-North Palfrey ,1,Dome,No_fish,3,Lizard Island,Canthigaster sp,Invertivore,0,0,0,0,0,0,
-North Palfrey ,2,Dome,No_fish,1,Lizard Island,Canthigaster sp,Invertivore,0,0,0,0,0,0,
-North Palfrey ,2,Dome,No_fish,2,Lizard Island,Canthigaster sp,Invertivore,0,0,0,0,0,0,
-North Palfrey ,2,Dome,No_fish,3,Lizard Island,Arothron nigropunctatus,Invertivore,0,0,0,0,0,0,
+North Palfrey ,1,Dome,No_fish,1,Lizard Island,Canthigaster sp,Invertivore,0,0,0,0,0,0,0
+North Palfrey ,1,Dome,No_fish,2,Lizard Island,Canthigaster sp,Invertivore,0,0,0,0,0,0,0
+North Palfrey ,1,Dome,No_fish,3,Lizard Island,Canthigaster sp,Invertivore,0,0,0,0,0,0,0
+North Palfrey ,2,Dome,No_fish,1,Lizard Island,Canthigaster sp,Invertivore,0,0,0,0,0,0,0
+North Palfrey ,2,Dome,No_fish,2,Lizard Island,Canthigaster sp,Invertivore,0,0,0,0,0,0,0
+North Palfrey ,2,Dome,No_fish,3,Lizard Island,Arothron nigropunctatus,Invertivore,0,0,0,0,0,0,0
 Blue lagoon,1,Dome,Fish,1,Lizard Island,Caranx sexfasciatus,Piscivore,0,0,0,1,0.715478178,0.15,83.86
 Blue lagoon,1,Dome,Fish,1,Lizard Island,Caranx sexfasciatus,Piscivore,0,0,0,1,0.715478178,0.15,83.86
 Blue lagoon,1,Dome,Fish,1,Lizard Island,Diagramma labiosum,Invertivore,0,0,0,1,0.715478178,0.15,83.86
@@ -92,12 +92,12 @@ Blue lagoon,2,Dome,Fish,3,Lizard Island,Plectorhinchus chrysotaenia,Invertivore,
 Blue lagoon,2,Dome,Fish,3,Lizard Island,Chrysiptera rollandi,Planktivore,0,0,0,1,0.890339813,0.07,67.39
 Blue lagoon,2,Dome,Fish,3,Lizard Island,Chrysiptera rollandi,Planktivore,0,0,0,1,0.890339813,0.07,67.39
 Blue lagoon,2,Dome,Fish,3,Lizard Island,Platax orbicularis,Piscivore,0,0,0,1,0.890339813,0.08,67.39
-Blue lagoon,1,Dome,No_fish,1,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,
-Blue lagoon,1,Dome,No_fish,2,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,
-Blue lagoon,1,Dome,No_fish,3,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,
-Blue lagoon,2,Dome,No_fish,1,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,
-Blue lagoon,2,Dome,No_fish,2,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,
-Blue lagoon,2,Dome,No_fish,3,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,
+Blue lagoon,1,Dome,No_fish,1,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,0
+Blue lagoon,1,Dome,No_fish,2,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,0
+Blue lagoon,1,Dome,No_fish,3,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,0
+Blue lagoon,2,Dome,No_fish,1,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,0
+Blue lagoon,2,Dome,No_fish,2,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,0
+Blue lagoon,2,Dome,No_fish,3,Lizard Island,Platax orbicularis,Piscivore,0,0,0,0,0,0,0
 Malabar 1 ,1,Dome,Fish,1,Sydney,Platax orbicularis,Piscivore,0,0,0,0,0,0,81.15
 Malabar 1 ,1,Dome,Fish,2,Sydney,Platax orbicularis,Piscivore,0,0,0,0,0,0,71.21
 Malabar 1 ,1,Dome,Fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,1,0.960153625,0.25,62.49
@@ -107,12 +107,12 @@ Malabar 1 ,2,Dome,Fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,1,0.633847454,0.
 Malabar 1 ,2,Dome,Fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,1,0.633847454,0.1,94.66
 Malabar 1 ,2,Dome,Fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,1,0.633847454,0.03,94.66
 Malabar 1 ,2,Dome,Fish,3,Sydney,Nelusetta ayraud,Omnivore,1,0.633847454,0.1,0,0,0,94.66
-Malabar 1 ,1,Dome,No_fish,1,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
-Malabar 1 ,1,Dome,No_fish,2,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
-Malabar 1 ,1,Dome,No_fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
-Malabar 1 ,2,Dome,No_fish,1,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
-Malabar 1 ,2,Dome,No_fish,2,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
-Malabar 1 ,2,Dome,No_fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
+Malabar 1 ,1,Dome,No_fish,1,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0
+Malabar 1 ,1,Dome,No_fish,2,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0
+Malabar 1 ,1,Dome,No_fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0
+Malabar 1 ,2,Dome,No_fish,1,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0
+Malabar 1 ,2,Dome,No_fish,2,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0
+Malabar 1 ,2,Dome,No_fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0
 Malabar 2,1,Dome,Fish,1,Sydney,Atypichthys strigatus,Planktivore,0,0,0,5,4.05295866,0.2,74.02
 Malabar 2,1,Dome,Fish,1,Sydney,Nelusetta ayraud,Omnivore,1,0.810591732,0.2,0,0,0,74.02
 Malabar 2,1,Dome,Fish,1,Sydney,Nelusetta ayraud,Omnivore,0,0,0,5,4.05295866,0.2,74.02
@@ -152,9 +152,9 @@ Malabar 2,2,Dome,Fish,1,Sydney,Nelusetta ayraud,Omnivore,1,1.422475107,0.1,0,0,0
 Malabar 2,2,Dome,Fish,1,Sydney,Nelusetta ayraud,Omnivore,0,0,0,1,1.422475107,0.05,42.18
 Malabar 2,2,Dome,Fish,1,Sydney,Nelusetta ayraud,Omnivore,1,1.422475107,0.1,0,0,0,42.18
 Malabar 2,2,Dome,Fish,2,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,44.28
-Malabar 2,1,Dome,No_fish,1,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
-Malabar 2,1,Dome,No_fish,2,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
-Malabar 2,1,Dome,No_fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
-Malabar 2,2,Dome,No_fish,1,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
-Malabar 2,2,Dome,No_fish,2,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
-Malabar 2,2,Dome,No_fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,
+Malabar 2,1,Dome,No_fish,1,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0
+Malabar 2,1,Dome,No_fish,2,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0
+Malabar 2,1,Dome,No_fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0
+Malabar 2,2,Dome,No_fish,1,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0
+Malabar 2,2,Dome,No_fish,2,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0
+Malabar 2,2,Dome,No_fish,3,Sydney,Nelusetta ayraud,Omnivore,0,0,0,0,0,0,0

@@ -253,6 +253,7 @@ plank_inv <- glmmTMB(inspect ~ Area + (1|Site) + (1|rep_ID) + offset (log(total_
 Anova(plank_inv) # p=0.8923
 
 plank_inv_res_domes <- simulateResiduals(plank_inv)
-plot(plank_inv_res_domes) # Good!
+plot(plank_inv_res_domes) # Good
+
 
 ######################################### end of code #################################################################################

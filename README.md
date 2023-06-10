@@ -1,3 +1,4 @@
+![image](https://github.com/mpaulasg/Predation_domes_PaulaSgarlatta/assets/7266463/bd13d5aa-2637-4e54-a514-dbf5133f36be)
 https://zenodo.org/badge/519042155.svg
 # Predation_domes_PaulaSgarlatta
 

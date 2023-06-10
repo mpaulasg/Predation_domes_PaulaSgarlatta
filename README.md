@@ -1,4 +1,4 @@
-https://zenodo.org/badge/519042155.svg
+<a href="https://zenodo.org/badge/latestdoi/519042155"><img src="https://zenodo.org/badge/519042155.svg" alt="DOI"></a>
 # Predation_domes_PaulaSgarlatta
 
 Data and R code for the paper:

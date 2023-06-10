@@ -1,0 +1,27 @@
+type: dataset
+cff-version: 1.2.0
+message: "If you use this data and/or code, please cite it as below."
+authors:
+- family-names: "Sgarlatta"
+  given-names: "M. Paula"
+  orcid: "https://orcid.org/0000-0001-8323-8230"
+- family-names: "Karkarey"
+  given-names: "Rucha"
+  orcid: "https://orcid.org/0000-0002-2017-2075"
+- family-names: "Smith"
+  given-names: "Shannen M."
+  orcid: "https://orcid.org/0000-0003-1583-2785"
+- family-names: "Suthers"
+  given-names: "Iain M."
+  orcid: "https://orcid.org/0000-0002-9340-7461"
+- family-names: "Poore"
+  given-names: "Alistair G.B."
+  orcid: "https://orcid.org/0000-0002-3560-3659"
+- family-names: "Vergés"
+  given-names: "Adriana"
+  orcid: "https://orcid.org/0000-0002-3507-1234"  
+title: "Predation domes data and code"
+version: 1.0.0
+doi: 10.5281/zenodo.1234
+date-released: 2023-06-09
+url: "https://github.com/mpaulasg/Predation_domes_PaulaSgarlatta"

@@ -1,4 +1,4 @@
-![image](https://github.com/mpaulasg/Predation_domes_PaulaSgarlatta/assets/7266463/bd13d5aa-2637-4e54-a514-dbf5133f36be)
+[![image](https://github.com/mpaulasg/Predation_domes_PaulaSgarlatta/assets/7266463/bd13d5aa-2637-4e54-a514-dbf5133f36be)](https://zenodo.org/badge/latestdoi/519042155)
 # Predation_domes_PaulaSgarlatta
 
 Data and R code for the paper:
